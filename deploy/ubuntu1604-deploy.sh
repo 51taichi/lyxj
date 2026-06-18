@@ -51,7 +51,12 @@ docker run --rm "${DOCKER_RUN_OPTS[@]}" \
   -w /app \
   -e PUPPETEER_SKIP_DOWNLOAD=true \
   "$NODE_TAG" \
-  bash -lc "npm ci --include=dev"
+  bash -c "set -eux; \
+    apt-get update -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true; \
+    apt-get install -y --allow-unauthenticated ca-certificates gnupg; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends python3 make g++; \
+    npm ci --include=dev"
 
 echo "==> Restart API container (no docker build on old hosts)"
 docker rm -f lyxj-api 2>/dev/null || true
