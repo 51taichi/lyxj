@@ -1,0 +1,50 @@
+@import url("./tokens.css");
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  background: #e8ebf2;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.phone-frame {
+  max-width: var(--page-max-width);
+  min-height: 100vh;
+  margin: 0 auto;
+  background: transparent;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.page-content {
+  padding: calc(16px * var(--scale)) var(--space-page-x) calc(var(--nav-height) + var(--safe-bottom) + calc(16px * var(--scale)));
+}
+
+.page-content--no-nav {
+  padding-bottom: calc(var(--safe-bottom) + 16px);
+}

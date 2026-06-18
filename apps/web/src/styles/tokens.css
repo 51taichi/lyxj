@@ -1,0 +1,92 @@
+:root {
+  /*
+   * Figma 画布 1200px（@2x）→ 逻辑宽 600px。
+   * --scale 必须是无单位比值（px ÷ px），否则 calc 失效、图片会撑满原图尺寸。
+   */
+  --page-max-width: 430px;
+  --design-width: 600px;
+  --scale: calc(min(100vw, var(--page-max-width)) / var(--design-width));
+
+  /* Brand colors */
+  --color-primary: #5788f8;
+  --color-primary-dark: #3a76f9;
+  --color-primary-light: #58a2fb;
+  --color-primary-bg: #ecf5fd;
+  --color-primary-border: #d9defd;
+  --color-primary-soft: #f3f5fe;
+  --color-primary-tag: #597ef9;
+  --color-purple: #5d67f6;
+  --color-purple-soft: #f1f1fd;
+
+  --color-text-primary: #343b4d;
+  --color-text-secondary: #3f4451;
+  --color-text-body: #4d5260;
+  --color-text-muted: #9a9aad;
+  --color-text-light: #a2a5b1;
+  --color-text-nav: #6f7481;
+  --color-text-nav-active: #5788f8;
+
+  --color-bg-page: #f4f6fb;
+  --color-bg-card: #fefefe;
+  --color-bg-divider: #fafafb;
+  --color-border: #f0f1f5;
+
+  --color-gradient-start: #3a76f9;
+  --color-gradient-end: #5788f8;
+  --color-progress-track: #eef1f6;
+  --color-progress-fill: #5788f8;
+
+  --font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-num: "Inter", "SF Pro Display", var(--font-family);
+
+  /* ── 字号（Figma 逻辑 px）── */
+  --fs-hero: calc(33.5px * var(--scale));
+  --fs-hero-sub: calc(17.5px * var(--scale));
+  --fs-section: calc(21.5px * var(--scale));
+  --fs-page-title: calc(21.5px * var(--scale));
+  --fs-card-title: calc(18.5px * var(--scale));
+  --fs-card-desc: calc(16px * var(--scale));
+  --fs-body: calc(15px * var(--scale));
+  --fs-caption: calc(14px * var(--scale));
+  --fs-caption-sm: calc(13px * var(--scale));
+  --fs-btn: calc(16.5px * var(--scale));
+  --fs-stat: calc(26px * var(--scale));
+  --fs-timer: calc(65px * var(--scale));
+  --fs-summary-num: calc(54.5px * var(--scale));
+  --fs-summary-unit: calc(19.5px * var(--scale));
+  --fs-focus-title: calc(23px * var(--scale));
+  --fs-focus-status: calc(23px * var(--scale));
+
+  /* ── 图标/插图（Figma 逻辑 px）── */
+  --icon-nav: calc(23px * var(--scale));
+  --icon-goal-lg: calc(58px * var(--scale));
+  --icon-goal-md: calc(34px * var(--scale));
+  --icon-goal-sm: calc(30px * var(--scale));
+  --icon-plus: calc(14px * var(--scale));
+  --icon-record: calc(48.5px * var(--scale));
+  --icon-rocket-xl: calc(76.5px * var(--scale));
+  --icon-rocket-focus: calc(52px * var(--scale));
+  --icon-quick: calc(25px * var(--scale));
+  --icon-chevron: calc(7.5px * var(--scale));
+  --icon-header: calc(19px * var(--scale));
+  --icon-back: calc(18px * var(--scale));
+  --ring-summary: calc(124.5px * var(--scale));
+  --ring-timer: calc(280px * var(--scale));
+  --ring-pause: calc(64px * var(--scale));
+  --hero-monster-w: calc(180px * var(--scale));
+  --hero-monster-h: calc(94px * var(--scale));
+
+  /* ── 间距（Figma 逻辑 px）── */
+  --space-page-x: calc(16px * var(--scale));
+  --space-section: calc(24px * var(--scale));
+  --space-card: calc(12px * var(--scale));
+  --nav-height: calc(91.5px * var(--scale));
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --radius-lg: calc(20px * var(--scale));
+  --radius-xl: calc(28px * var(--scale));
+  --radius-pill: 999px;
+
+  --shadow-card: 0 2px 16px rgba(52, 59, 77, 0.06);
+  --shadow-soft: 0 8px 24px rgba(58, 118, 249, 0.22);
+}

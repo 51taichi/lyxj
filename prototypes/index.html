@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <title>UI 原型预览 · 定制游核价系统</title>
+  <link rel="stylesheet" href="css/base.css">
+  <style>
+    body { background: #dde1ea; }
+    .hub {
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+    .hub__title {
+      font-size: 22px;
+      font-weight: 600;
+      color: #343b4d;
+      margin-bottom: 8px;
+    }
+    .hub__desc {
+      font-size: 14px;
+      color: #9a9aad;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+    .hub__list { display: flex; flex-direction: column; gap: 12px; }
+    .hub__link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 16px rgba(52,59,77,.06);
+      transition: transform .15s;
+    }
+    .hub__link:active { transform: scale(.98); }
+    .hub__link-title { font-size: 16px; font-weight: 600; color: #3f4451; }
+    .hub__link-sub { font-size: 13px; color: #9a9aad; margin-top: 4px; }
+    .hub__arrow { color: #5788f8; font-size: 18px; }
+    .hub__badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #ecf5fd;
+      color: #5788f8;
+      border-radius: 999px;
+      font-size: 11px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="hub">
+    <h1 class="hub__title">UI 风格原型</h1>
+    <p class="hub__desc">基于 Figma 设计稿实现的 3 个移动端 H5 参考页面，用于确认视觉风格后再应用到定制游核价系统。</p>
+    <div class="hub__list">
+      <a class="hub__link" href="pages/goals.html">
+        <div>
+          <div class="hub__link-title">专注目标 <span class="hub__badge">页面 1</span></div>
+          <div class="hub__link-sub">目标列表 · 进度卡片 · 底部导航</div>
+        </div>
+        <span class="hub__arrow">→</span>
+      </a>
+      <a class="hub__link" href="pages/focus.html">
+        <div>
+          <div class="hub__link-title">专注执行 <span class="hub__badge">页面 2</span></div>
+          <div class="hub__link-sub">计时器 · 环形进度 · 快捷入口</div>
+        </div>
+        <span class="hub__arrow">→</span>
+      </a>
+      <a class="hub__link" href="pages/detail.html">
+        <div>
+          <div class="hub__link-title">目标详情 <span class="hub__badge">页面 3</span></div>
+          <div class="hub__link-sub">数据统计 · 柱状图 · 最近记录</div>
+        </div>
+        <span class="hub__arrow">→</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

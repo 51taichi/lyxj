@@ -1,0 +1,86 @@
+:root {
+  /*
+   * Figma 画布 1200px（@2x）→ 逻辑宽 600px。
+   * --scale 必须是无单位比值（px ÷ px），否则 calc 失效、图片会撑满原图尺寸。
+   */
+  --page-max-width: 430px;
+  --design-width: 600px;
+  --scale: calc(min(100vw, var(--page-max-width)) / var(--design-width));
+
+  /* Brand colors */
+  --color-primary: #5788f8;
+  --color-primary-dark: #3a76f9;
+  --color-primary-light: #58a2fb;
+  --color-primary-bg: #ecf5fd;
+  --color-primary-border: #d9defd;
+  --color-primary-soft: #f3f5fe;
+  --color-primary-tag: #597ef9;
+  --color-purple: #5d67f6;
+  --color-purple-soft: #f1f1fd;
+
+  --color-text-primary: #343b4d;
+  --color-text-secondary: #3f4451;
+  --color-text-body: #4d5260;
+  --color-text-muted: #9a9aad;
+  --color-text-light: #a2a5b1;
+  --color-text-nav: #6f7481;
+  --color-text-nav-active: #5788f8;
+
+  --color-bg-page: #f4f6fb;
+  --color-bg-card: #fefefe;
+  --color-bg-divider: #fafafb;
+  --color-border: #f0f1f5;
+
+  --font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-num: "Inter", "SF Pro Display", var(--font-family);
+
+  /* ── 字号（Figma 逻辑 px）── */
+  --fs-hero: calc(33.5px * var(--scale));        /* 67 @2x 专注目标 */
+  --fs-hero-sub: calc(17.5px * var(--scale));    /* 35 */
+  --fs-section: calc(21.5px * var(--scale));     /* 43 我的目标/进度统计 */
+  --fs-page-title: calc(21.5px * var(--scale));  /* 43 目标详情 */
+  --fs-card-title: calc(18.5px * var(--scale));  /* 37 目标项标题 */
+  --fs-card-desc: calc(16px * var(--scale));     /* 32 描述 */
+  --fs-body: calc(15px * var(--scale));          /* 30 辅助文字 */
+  --fs-caption: calc(14px * var(--scale));       /* 28 导航/小字 */
+  --fs-caption-sm: calc(13px * var(--scale));    /* 26 导航激活 */
+  --fs-btn: calc(16.5px * var(--scale));         /* 33 按钮 */
+  --fs-stat: calc(26px * var(--scale));          /* 52 统计数字 */
+  --fs-timer: calc(65px * var(--scale));         /* 130 计时器 */
+  --fs-summary-num: calc(54.5px * var(--scale)); /* 109 4.2 */
+  --fs-summary-unit: calc(19.5px * var(--scale));/* 39 小时 */
+  --fs-focus-title: calc(23px * var(--scale));   /* 46 专注执行 */
+  --fs-focus-status: calc(23px * var(--scale));  /* 46 专注中 */
+
+  /* ── 图标/插图（Figma 逻辑 px）── */
+  --icon-nav: calc(23px * var(--scale));         /* ~47 @2x */
+  --icon-goal-lg: calc(58px * var(--scale));      /* 116 火箭 */
+  --icon-goal-md: calc(34px * var(--scale));     /* 68 书/运动 */
+  --icon-goal-sm: calc(30px * var(--scale));     /* 60 叶子 */
+  --icon-plus: calc(14px * var(--scale));        /* 28 */
+  --icon-record: calc(48.5px * var(--scale));    /* 97 */
+  --icon-rocket-xl: calc(76.5px * var(--scale)); /* 153 详情页 */
+  --icon-rocket-focus: calc(52px * var(--scale));/* 104 专注页 */
+  --icon-quick: calc(25px * var(--scale));       /* 50 快捷卡片 */
+  --icon-chevron: calc(7.5px * var(--scale));    /* 15 */
+  --icon-header: calc(19px * var(--scale));      /* 38 音乐/更多 */
+  --icon-back: calc(18px * var(--scale));        /* 36 */
+  --ring-summary: calc(124.5px * var(--scale));  /* 249 完成度环 */
+  --ring-timer: calc(280px * var(--scale));       /* 741@2x，略缩小适配屏宽 */
+  --ring-pause: calc(64px * var(--scale));        /* 161@2x */
+  --hero-monster-w: calc(180px * var(--scale));   /* 505@2x */
+  --hero-monster-h: calc(94px * var(--scale));    /* 263@2x */
+
+  /* ── 间距（Figma 逻辑 px）── */
+  --space-page-x: calc(16px * var(--scale));
+  --space-section: calc(24px * var(--scale));
+  --space-card: calc(12px * var(--scale));
+  --nav-height: calc(91.5px * var(--scale));     /* 183 @2x */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --radius-lg: calc(20px * var(--scale));
+  --radius-xl: calc(28px * var(--scale));
+  --radius-pill: 999px;
+
+  --shadow-card: 0 2px 16px rgba(52, 59, 77, 0.06);
+}

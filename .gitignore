@@ -1,0 +1,12 @@
+.DS_Store
+*.log
+.env
+.env.*
+
+node_modules/
+dist/
+
+# Runtime data (generated on server)
+apps/api/data/config.json
+apps/api/data/app.db
+apps/api/data/shares/
