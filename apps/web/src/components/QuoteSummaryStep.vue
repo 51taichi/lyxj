@@ -11,6 +11,9 @@ import {
   defaultCustomerAmounts,
 } from '../utils/customerMarkup'
 import { downloadBlob } from '../utils/exportImage'
+import { copyText, isWeChatBrowser } from '../utils/wechatEnv'
+import WechatImagePreviewSheet from './WechatImagePreviewSheet.vue'
+import WechatShareGuideSheet from './WechatShareGuideSheet.vue'
 import {
   buildDefaultItinerary,
   dayLabel,
@@ -49,6 +52,12 @@ const shareError = ref('')
 const shareResult = ref<{ id: string; expiresAt: string } | null>(null)
 const imageLoading = ref(false)
 const pdfLoading = ref(false)
+const showShareGuide = ref(false)
+const shareLinkCopied = ref(false)
+const shareGuideMode = ref<'link' | 'pdf'>('link')
+const showImagePreview = ref(false)
+const imagePreviewUrl = ref('')
+const inWeChat = isWeChatBrowser()
 const agencies = ref<Agency[]>([])
 const selectedAgencyId = ref('')
 const costDetail = ref<BreakdownItem[]>([])
@@ -316,10 +325,16 @@ async function ensureShare(): Promise<boolean> {
 
 async function generatePage() {
   if (!(await ensureShare())) return
-  try {
-    await navigator.clipboard.writeText(shareUrl.value)
-  } catch {
-    window.prompt('链接已生成，请复制发送给客户：', shareUrl.value)
+  shareLinkCopied.value = await copyText(shareUrl.value)
+  shareGuideMode.value = 'link'
+  showShareGuide.value = true
+}
+
+function closeImagePreview() {
+  showImagePreview.value = false
+  if (imagePreviewUrl.value) {
+    URL.revokeObjectURL(imagePreviewUrl.value)
+    imagePreviewUrl.value = ''
   }
 }
 
@@ -329,7 +344,9 @@ async function downloadShareImage() {
   shareError.value = ''
   try {
     const blob = await api.exportImage(shareResult.value!.id)
-    downloadBlob(blob, `定制方案-${shareResult.value!.id}.png`)
+    closeImagePreview()
+    imagePreviewUrl.value = URL.createObjectURL(blob)
+    showImagePreview.value = true
   } catch (e) {
     shareError.value = e instanceof Error ? e.message : '图片生成失败'
   } finally {
@@ -344,6 +361,10 @@ async function downloadSharePdf() {
   try {
     const blob = await api.exportPdf(shareResult.value!.id)
     downloadBlob(blob, `定制方案-${shareResult.value!.id}.pdf`)
+    if (inWeChat) {
+      shareGuideMode.value = 'pdf'
+      showShareGuide.value = true
+    }
   } catch (e) {
     shareError.value = e instanceof Error ? e.message : 'PDF 生成失败'
   } finally {
@@ -355,7 +376,7 @@ async function downloadSharePdf() {
 <template>
   <section class="step-panel step-panel--flat pax-step summary-step">
     <p v-if="confirmed" class="step-hint step-hint--compact summary-step__hint summary-step__hint--ok">
-      行程已确认，选择品牌后可生成页面、图片或 PDF 发给客户
+      行程已确认。在微信里建议：先发链接，或生成长图后长按转发给客户
     </p>
 
     <div class="pax-row" :class="{ 'pax-row--required-missing': !hasArrivalDate }">
@@ -568,7 +589,7 @@ async function downloadSharePdf() {
           :disabled="shareLoading || imageLoading || pdfLoading"
           @click="generatePage"
         >
-          {{ shareLoading ? '生成中…' : '生成页面' }}
+          {{ shareLoading ? '生成中…' : '发给客户（链接）' }}
         </button>
         <button
           type="button"
@@ -576,15 +597,15 @@ async function downloadSharePdf() {
           :disabled="shareLoading || imageLoading || pdfLoading"
           @click="downloadShareImage"
         >
-          {{ imageLoading ? '生成中…' : '生成图片' }}
+          {{ imageLoading ? '生成中…' : '生成长图' }}
         </button>
         <button
           type="button"
-          class="btn-outline summary-step__gen-btn"
+          class="btn-outline summary-step__gen-btn summary-step__gen-btn--secondary"
           :disabled="shareLoading || imageLoading || pdfLoading"
           @click="downloadSharePdf"
         >
-          {{ pdfLoading ? '生成中…' : '生成 PDF' }}
+          {{ pdfLoading ? '生成中…' : 'PDF（打印）' }}
         </button>
       </div>
 
@@ -598,9 +619,23 @@ async function downloadSharePdf() {
     <p v-if="shareError" class="step-hint step-hint--warn summary-step__warn">{{ shareError }}</p>
 
     <div v-if="shareResult && shareUrl" class="share-link-box">
-      <span class="share-link-box__label">客户页面链接（生成页面时已复制）</span>
+      <span class="share-link-box__label">客户页面链接（点「发给客户」查看转发步骤）</span>
       <input class="share-link-box__input" :value="shareUrl" readonly @focus="($event.target as HTMLInputElement).select()" />
     </div>
+
+    <WechatShareGuideSheet
+      :open="showShareGuide"
+      :share-url="shareUrl"
+      :link-copied="shareLinkCopied"
+      :mode="shareGuideMode"
+      @close="showShareGuide = false"
+    />
+
+    <WechatImagePreviewSheet
+      :open="showImagePreview"
+      :image-url="imagePreviewUrl"
+      @close="closeImagePreview"
+    />
 
     <!-- 拖动中的「元神」跟随指针 -->
     <Teleport to="body">
