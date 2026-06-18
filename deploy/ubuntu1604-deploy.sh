@@ -51,7 +51,7 @@ docker run --rm "${DOCKER_RUN_OPTS[@]}" \
   -w /app \
   -e PUPPETEER_SKIP_DOWNLOAD=true \
   "$NODE_TAG" \
-  bash -lc "npm ci"
+  bash -lc "npm ci --include=dev"
 
 echo "==> Restart API container (no docker build on old hosts)"
 docker rm -f lyxj-api 2>/dev/null || true
