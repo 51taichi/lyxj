@@ -8,6 +8,9 @@ DIST="$WEB/dist"
 DATA="$API/data"
 NODE_TAG="node:20-bookworm-slim"
 
+# Ubuntu 16.04 + old Docker: Node 20 needs relaxed seccomp on the host.
+DOCKER_RUN_OPTS=(--security-opt seccomp=unconfined)
+
 mkdir -p "$DATA/shares"
 
 pull_node_image() {
@@ -36,7 +39,7 @@ pull_node_image() {
 pull_node_image
 
 echo "==> Build frontend (Node 20 container)"
-docker run --rm \
+docker run --rm "${DOCKER_RUN_OPTS[@]}" \
   -v "$WEB:/app" \
   -w /app \
   "$NODE_TAG" \
@@ -47,7 +50,7 @@ docker build -t lyxj-api "$API"
 
 echo "==> Restart API container"
 docker rm -f lyxj-api 2>/dev/null || true
-docker run -d \
+docker run -d "${DOCKER_RUN_OPTS[@]}" \
   --name lyxj-api \
   --restart unless-stopped \
   -p 127.0.0.1:3180:3180 \
