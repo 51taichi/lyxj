@@ -14,17 +14,30 @@ function formatExpires(iso: string): string {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 }
 
+/** 导出长图用 SVG 图标，避免 Linux 服务器缺少 emoji 字体导致乱码 */
+function exportIcon(kind: 'date' | 'people' | 'hotel' | 'diamond' | 'car'): string {
+  const common = 'width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"';
+  const icons: Record<typeof kind, string> = {
+    date: `<svg ${common}><rect x="3" y="5" width="18" height="16" rx="2" stroke="#5788f8" stroke-width="1.8"/><path d="M8 3v4M16 3v4M3 10h18" stroke="#5788f8" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+    people: `<svg ${common}><circle cx="9" cy="8" r="3" stroke="#5788f8" stroke-width="1.8"/><path d="M4 20c0-3.3 2.2-5 5-5s5 1.7 5 5" stroke="#5788f8" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="9" r="2.2" stroke="#5788f8" stroke-width="1.6"/><path d="M14.5 20c.3-2.2 1.8-3.5 3.5-3.5s3.2 1.3 3.5 3.5" stroke="#5788f8" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    hotel: `<svg ${common}><path d="M4 20V6a2 2 0 012-2h12a2 2 0 012 2v14" stroke="#5788f8" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 20h16M8 8h2M8 12h2M14 8h2M14 12h2" stroke="#5788f8" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+    diamond: `<svg ${common}><path d="M12 3l7 7-7 11L5 10l7-7z" stroke="#5788f8" stroke-width="1.8" stroke-linejoin="round"/></svg>`,
+    car: `<svg ${common}><path d="M4 14l1.5-5h13L20 14" stroke="#5788f8" stroke-width="1.8" stroke-linejoin="round"/><rect x="3" y="14" width="18" height="5" rx="1.5" stroke="#5788f8" stroke-width="1.8"/><circle cx="7.5" cy="19" r="1.5" fill="#5788f8"/><circle cx="16.5" cy="19" r="1.5" fill="#5788f8"/></svg>`,
+  };
+  return icons[kind];
+}
+
 export function renderShareHtml(snapshot: QuoteShareSnapshot): string {
   const agency = snapshot.agency;
   const phone = agency?.phone?.replace(/\D/g, '') ?? '';
   const expiresLabel = formatExpires(snapshot.expiresAt);
 
   const metaRows = [
-    snapshot.meta.arrivalDisplay && { icon: '📅', text: snapshot.meta.arrivalDisplay },
-    { icon: '👥', text: snapshot.meta.peopleLabel },
-    snapshot.meta.stayLabel && { icon: '🏨', text: snapshot.meta.stayLabel },
-    snapshot.meta.hotelLabel && { icon: '💎', text: snapshot.meta.hotelLabel },
-    snapshot.meta.transportLine && { icon: '🚗', text: snapshot.meta.transportLine },
+    snapshot.meta.arrivalDisplay && { icon: exportIcon('date'), text: snapshot.meta.arrivalDisplay },
+    { icon: exportIcon('people'), text: snapshot.meta.peopleLabel },
+    snapshot.meta.stayLabel && { icon: exportIcon('hotel'), text: snapshot.meta.stayLabel },
+    snapshot.meta.hotelLabel && { icon: exportIcon('diamond'), text: snapshot.meta.hotelLabel },
+    snapshot.meta.transportLine && { icon: exportIcon('car'), text: snapshot.meta.transportLine },
   ].filter(Boolean) as { icon: string; text: string }[];
 
   const timeline = snapshot.itineraryDays
@@ -108,8 +121,12 @@ export function renderShareHtml(snapshot: QuoteShareSnapshot): string {
       padding: 14px 16px; margin-bottom: 16px;
       box-shadow: 0 4px 16px rgba(52, 59, 77, 0.06);
     }
-    .meta-row { display: flex; gap: 10px; padding: 6px 0; font-size: 14px; line-height: 1.5; }
-    .meta-icon { width: 22px; text-align: center; flex-shrink: 0; }
+    .meta-row { display: flex; gap: 10px; padding: 6px 0; font-size: 14px; line-height: 1.5; align-items: flex-start; }
+    .meta-icon {
+      width: 22px; height: 22px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .meta-icon svg { display: block; width: 18px; height: 18px; }
     .section-title { font-size: 16px; font-weight: 700; color: #343b4d; margin-bottom: 12px; }
     .timeline { list-style: none; padding: 12px 16px; background: #fefefe; border: 1px solid #f0f1f5; border-radius: 12px; }
     .timeline-item { display: flex; gap: 12px; position: relative; padding-bottom: 16px; }
