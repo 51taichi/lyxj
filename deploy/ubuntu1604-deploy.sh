@@ -45,17 +45,26 @@ docker run --rm "${DOCKER_RUN_OPTS[@]}" \
   "$NODE_TAG" \
   bash -lc "npm ci && npm run build"
 
-echo "==> Build API image"
-docker build -t lyxj-api "$API"
+echo "==> Install API dependencies (Node 20 container)"
+docker run --rm "${DOCKER_RUN_OPTS[@]}" \
+  -v "$API:/app" \
+  -w /app \
+  -e PUPPETEER_SKIP_DOWNLOAD=true \
+  "$NODE_TAG" \
+  bash -lc "npm ci"
 
-echo "==> Restart API container"
+echo "==> Restart API container (no docker build on old hosts)"
 docker rm -f lyxj-api 2>/dev/null || true
 docker run -d "${DOCKER_RUN_OPTS[@]}" \
   --name lyxj-api \
   --restart unless-stopped \
   -p 127.0.0.1:3180:3180 \
-  -v "$DATA:/app/data" \
-  lyxj-api
+  -v "$API:/app" \
+  -w /app \
+  -e API_PORT=3180 \
+  -e PUPPETEER_SKIP_DOWNLOAD=true \
+  "$NODE_TAG" \
+  bash -lc "npm start"
 
 echo "==> Done"
 echo "Frontend: $DIST"
