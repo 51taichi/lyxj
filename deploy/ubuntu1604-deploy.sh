@@ -6,14 +6,40 @@ WEB="$ROOT/apps/web"
 API="$ROOT/apps/api"
 DIST="$WEB/dist"
 DATA="$API/data"
+NODE_TAG="node:20-bookworm-slim"
 
 mkdir -p "$DATA/shares"
+
+pull_node_image() {
+  local mirrors=(
+    "docker.m.daocloud.io/library/node:20-bookworm-slim"
+    "registry.cn-hangzhou.aliyuncs.com/library/node:20-bookworm-slim"
+    "node:20-bookworm-slim"
+  )
+
+  for img in "${mirrors[@]}"; do
+    echo "==> Pull Node image: $img"
+    if docker pull "$img"; then
+      if [[ "$img" != "$NODE_TAG" ]]; then
+        docker tag "$img" "$NODE_TAG"
+      fi
+      echo "==> Node image ready: $NODE_TAG"
+      return 0
+    fi
+    echo "==> Failed: $img"
+  done
+
+  echo "ERROR: Could not pull Node 20 image from any mirror."
+  exit 1
+}
+
+pull_node_image
 
 echo "==> Build frontend (Node 20 container)"
 docker run --rm \
   -v "$WEB:/app" \
   -w /app \
-  node:20-bookworm-slim \
+  "$NODE_TAG" \
   bash -lc "npm ci && npm run build"
 
 echo "==> Build API image"
