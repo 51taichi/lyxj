@@ -26,6 +26,7 @@
         <button type="button" class="btn-outline" @click="addAgency">+ 品牌</button>
       </div>
 
+      <div class="admin-agency-grid">
       <section v-for="(agency, ai) in sortedAgencies" :key="agency.id" class="admin-agency step-panel step-panel--flat">
         <div class="admin-row admin-row--action">
           <input v-model="agency.name" class="quote-meta-input" placeholder="旅行社名称" />
@@ -52,6 +53,7 @@
         <label class="quote-field-label">地址（可选）</label>
         <input v-model="agency.address" class="quote-meta-input" placeholder="北京市…" />
       </section>
+      </div>
 
       <p v-if="message" class="admin-msg" :class="{ 'admin-msg--err': isError }">{{ message }}</p>
 

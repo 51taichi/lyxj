@@ -23,9 +23,15 @@
         <h2 class="section-header__title">淡旺季价格段</h2>
         <button type="button" class="btn-outline" @click="addPeriod">+ 时间段</button>
       </div>
-      <p class="step-hint" style="margin-top: 0">标准价为下方维度标准价；抵达日期命中时间段时覆盖用车、酒店、导服及餐补（景点不变）。</p>
+      <p class="step-hint admin-section-hint">标准价为下方维度标准价；抵达日期命中时间段时覆盖用车、酒店、导服及餐补（景点不变）。</p>
 
-      <section v-for="(period, pi) in config.pricePeriods" :key="period.id" class="admin-dim">
+      <div class="admin-dim-grid admin-dim-grid--periods">
+      <section
+        v-for="(period, pi) in config.pricePeriods"
+        :key="period.id"
+        class="admin-dim"
+        :class="{ 'admin-dim--expanded': periodExpanded[period.id] }"
+      >
         <button type="button" class="admin-dim__head" @click="togglePeriod(period.id)">
           <span class="admin-dim__name">{{ periodHeadLabel(period) }}</span>
           <span class="admin-dim__chev">{{ periodExpanded[period.id] ? '▾' : '▸' }}</span>
@@ -60,6 +66,7 @@
           </div>
           <template v-for="dim in periodOverrideDimensions" :key="dim.id">
             <p class="admin-period__dim-name">{{ dim.name }}</p>
+            <div class="admin-option-grid admin-option-grid--compact">
             <article v-for="opt in dim.options" :key="opt.id" class="admin-option admin-option--compact">
               <span class="admin-option__name" :title="opt.name">{{ opt.name }}</span>
               <div
@@ -83,15 +90,23 @@
                 </div>
               </div>
             </article>
+            </div>
           </template>
         </div>
       </section>
+      </div>
 
       <div class="section-header">
         <h2 class="section-header__title">核价维度（10项）</h2>
       </div>
 
-      <section v-for="dim in sortedDimensions" :key="dim.id" class="admin-dim">
+      <div class="admin-dim-grid admin-dim-grid--dimensions">
+      <section
+        v-for="dim in sortedDimensions"
+        :key="dim.id"
+        class="admin-dim"
+        :class="{ 'admin-dim--expanded': expanded[dim.id] }"
+      >
         <button type="button" class="admin-dim__head" @click="toggle(dim.id)">
           <span class="admin-dim__order">{{ dim.sortOrder }}</span>
           <span class="admin-dim__name">{{ dim.name }}</span>
@@ -143,6 +158,7 @@
               <button type="button" class="btn-outline" @click="addOption(dim)">+ 选项</button>
             </div>
 
+            <div class="admin-option-grid">
             <article v-for="(opt, oi) in dim.options" :key="opt.id" class="admin-option admin-option--stack">
               <div class="admin-row admin-row--action admin-row--tight">
                 <input v-model="opt.name" class="quote-meta-input" placeholder="选项名称" />
@@ -168,11 +184,13 @@
                 </div>
               </div>
             </article>
+            </div>
           </template>
         </div>
       </section>
+      </div>
 
-      <section class="admin-dim admin-formula-section">
+      <section class="admin-dim admin-formula-section admin-dim--full">
         <button type="button" class="admin-dim__head" @click="formulaExpanded = !formulaExpanded">
           <span class="admin-dim__name">计价公式（docx）</span>
           <span class="admin-dim__chev">{{ formulaExpanded ? '▾' : '▸' }}</span>
