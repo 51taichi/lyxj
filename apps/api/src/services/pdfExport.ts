@@ -6,9 +6,11 @@ let browserPromise: ReturnType<typeof puppeteer.launch> | null = null;
 
 async function getBrowser() {
   if (!browserPromise) {
+    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH?.trim();
     browserPromise = puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      ...(executablePath ? { executablePath } : {}),
     });
   }
   return browserPromise;

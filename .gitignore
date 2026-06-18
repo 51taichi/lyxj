@@ -10,3 +10,4 @@ dist/
 apps/api/data/config.json
 apps/api/data/app.db
 apps/api/data/shares/
+apps/api/.cache/
