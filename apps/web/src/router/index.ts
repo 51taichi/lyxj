@@ -16,18 +16,22 @@ const router = createRouter({
     },
     {
       path: '/admin',
-      component: () => import('../views/AdminHomeView.vue'),
+      component: () => import('../layouts/AdminLayout.vue'),
       meta: { requiresAuth: true, role: 'admin' },
-    },
-    {
-      path: '/admin/config',
-      component: () => import('../views/AdminConfigView.vue'),
-      meta: { requiresAuth: true, role: 'admin' },
-    },
-    {
-      path: '/admin/agencies',
-      component: () => import('../views/AdminAgenciesView.vue'),
-      meta: { requiresAuth: true, role: 'admin' },
+      children: [
+        {
+          path: '',
+          component: () => import('../views/AdminHomeView.vue'),
+        },
+        {
+          path: 'config',
+          component: () => import('../views/AdminConfigView.vue'),
+        },
+        {
+          path: 'agencies',
+          component: () => import('../views/AdminAgenciesView.vue'),
+        },
+      ],
     },
     { path: '/share/:id', component: () => import('../views/QuoteShareView.vue') },
     { path: '/share/:id/image', component: () => import('../views/ShareImagePreviewView.vue') },
@@ -39,9 +43,12 @@ router.beforeEach((to) => {
   if (to.path === '/admin/login' && auth.isLoggedInAdmin()) {
     return '/admin'
   }
-  if (!to.meta.requiresAuth) return true
+  if (!to.meta.requiresAuth && !to.matched.some((r) => r.meta.requiresAuth)) return true
+  const needsAuth = to.matched.some((r) => r.meta.requiresAuth)
+  if (!needsAuth) return true
   if (!auth.token) return '/admin/login'
-  if (to.meta.role && auth.user?.role !== to.meta.role) {
+  const role = to.matched.find((r) => r.meta.role)?.meta.role
+  if (role && auth.user?.role !== role) {
     return '/admin/login'
   }
   return true

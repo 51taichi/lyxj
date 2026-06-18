@@ -1,5 +1,5 @@
 <template>
-  <div class="phone-frame">
+  <div class="phone-frame admin-page">
     <div class="page-bg">
       <img src="/proto-assets/goals/page-bg.png" alt="" />
     </div>

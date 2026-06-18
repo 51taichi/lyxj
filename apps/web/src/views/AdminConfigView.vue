@@ -1,5 +1,5 @@
 <template>
-  <div class="phone-frame">
+  <div class="phone-frame admin-page">
     <div class="page-bg">
       <img src="/proto-assets/goals/page-bg.png" alt="" />
     </div>
@@ -348,7 +348,7 @@ async function load() {
   if (!config.value.agencies) config.value.agencies = []
   if (!config.value.pricePeriods) config.value.pricePeriods = []
   for (const d of config.value!.dimensions) {
-    expanded[d.id] = d.id === 'attractions' || d.id === 'vehicle' || d.id === 'vehicleNeeds'
+    expanded[d.id] = false
   }
 }
 

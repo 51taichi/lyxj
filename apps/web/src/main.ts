@@ -7,5 +7,6 @@ import './styles/base.css'
 import './styles/components.css'
 import './styles/pages.css'
 import './styles/app.css'
+import './styles/admin-desktop.css'
 
 createApp(App).use(createPinia()).use(router).mount('#app')
