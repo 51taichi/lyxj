@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { copyText } from '../utils/wechatEnv'
+import { nextTick, ref, watch } from 'vue'
+import { copyFromInput, copyHintMessage, copyText, isWeChatBrowser, selectInputText } from '../utils/wechatEnv'
 
 const props = defineProps<{
   open: boolean
@@ -14,19 +14,52 @@ const emit = defineEmits<{
 }>()
 
 const copyHint = ref('')
+const urlInputRef = ref<HTMLInputElement | null>(null)
+const inWeChat = isWeChatBrowser()
+
+async function tryAutoCopy() {
+  if (props.mode === 'pdf' || !props.shareUrl) return
+
+  await nextTick()
+  const input = urlInputRef.value
+  if (input) {
+    if (copyFromInput(input)) {
+      copyHint.value = copyHintMessage(true, inWeChat)
+      return
+    }
+  }
+
+  const ok = await copyText(props.shareUrl)
+  copyHint.value = copyHintMessage(ok, inWeChat)
+}
 
 watch(
   () => props.open,
   (open) => {
-    if (open) {
-      copyHint.value = props.linkCopied ? '链接已复制，可直接粘贴发送' : ''
+    if (open && props.mode !== 'pdf') {
+      void tryAutoCopy()
+    } else if (!open) {
+      copyHint.value = ''
     }
   },
 )
 
 async function onCopyLink() {
+  const input = urlInputRef.value
+  if (input && copyFromInput(input)) {
+    copyHint.value = copyHintMessage(true, inWeChat)
+    return
+  }
   const ok = await copyText(props.shareUrl)
-  copyHint.value = ok ? '链接已复制' : '请长按下方链接框全选复制'
+  copyHint.value = copyHintMessage(ok, inWeChat)
+}
+
+function onUrlFocus(event: FocusEvent) {
+  selectInputText(event.target as HTMLInputElement)
+}
+
+function onUrlClick(event: MouseEvent) {
+  selectInputText(event.target as HTMLInputElement)
 }
 </script>
 
@@ -49,19 +82,22 @@ async function onCopyLink() {
           <h3 class="wx-sheet__title">发给客户</h3>
           <p class="wx-sheet__lead">请把<strong>客户页面链接</strong>发到微信聊天，不要直接点右上角分享当前页。</p>
           <ol class="wx-sheet__steps">
-            <li>点击 <strong>复制链接</strong></li>
+            <li v-if="inWeChat">点 <strong>复制链接</strong>，或<strong>长按下方链接 → 拷贝</strong></li>
+            <li v-else>点击 <strong>复制链接</strong></li>
             <li>回到微信，打开客户聊天窗口</li>
             <li><strong>粘贴并发送</strong>，客户点开即可查看方案</li>
           </ol>
         </template>
 
-        <label v-if="mode !== 'pdf'" class="wx-sheet__url-label">客户页面链接</label>
+        <label v-if="mode !== 'pdf'" class="wx-sheet__url-label">客户页面链接（点一下可全选）</label>
         <input
           v-if="mode !== 'pdf'"
+          ref="urlInputRef"
           class="wx-sheet__url"
           :value="shareUrl"
           readonly
-          @focus="($event.target as HTMLInputElement).select()"
+          @focus="onUrlFocus"
+          @click="onUrlClick"
         />
 
         <div class="wx-sheet__actions">

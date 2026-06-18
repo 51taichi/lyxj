@@ -1477,6 +1477,8 @@
   font-size: var(--fs-caption);
   color: var(--color-text-secondary);
   background: var(--color-bg-divider);
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .wx-sheet__actions {
