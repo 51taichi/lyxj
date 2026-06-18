@@ -6,7 +6,9 @@ import { getDimensions, getAgencies, loadConfig, resetConfig, saveConfig } from 
 import { createShare, getShare } from './store/shareStore.js';
 import { findUserByUsername, updateUserPassword, verifyUserPassword } from './store/userStore.js';
 import { generateImageFromSnapshot, generatePdfFromSnapshot } from './services/pdfExport.js';
+import { readCachedExportImage, writeCachedExportImage } from './store/exportImageStore.js';
 import type { QuoteSelections, QuoteSharePayload, SystemConfig } from './types.js';
+import type { Response } from 'express';
 
 const app = express();
 const PORT = Number(process.env.API_PORT ?? 3180);
@@ -129,6 +131,32 @@ app.get('/share/:id', (req, res) => {
   res.json(snapshot);
 });
 
+async function serveExportImage(id: string, res: Response, inline: boolean) {
+  const snapshot = getShare(id);
+  if (!snapshot) {
+    res.status(404).json({ message: '链接不存在或已过期' });
+    return;
+  }
+  let png = readCachedExportImage(id);
+  if (!png) {
+    png = await generateImageFromSnapshot(snapshot);
+    writeCachedExportImage(id, png);
+  }
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Content-Disposition', `${inline ? 'inline' : 'attachment'}; filename="quote-${id}.png"`);
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.send(png);
+}
+
+/** 长图 PNG（GET，供微信内 img / 全屏查看） */
+app.get('/quote/export/image/:id', async (req, res) => {
+  try {
+    await serveExportImage(req.params.id, res, true);
+  } catch (e) {
+    res.status(500).json({ message: e instanceof Error ? e.message : '长图生成失败' });
+  }
+});
+
 /** 生成 PDF（基于已创建的分享快照） */
 app.post('/quote/export/pdf', async (req, res) => {
   try {
@@ -165,6 +193,7 @@ app.post('/quote/export/image', async (req, res) => {
       return;
     }
     const png = await generateImageFromSnapshot(snapshot);
+    writeCachedExportImage(id, png);
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Content-Disposition', `attachment; filename="quote-${id}.png"`);
     res.send(png);

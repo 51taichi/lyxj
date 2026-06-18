@@ -22,6 +22,9 @@ async function renderPage(snapshot: QuoteShareSnapshot) {
   const page = await browser.newPage();
   await page.setViewport({ width: 430, height: 800, deviceScaleFactor: 2 });
   await page.setContent(html, { waitUntil: 'networkidle0' });
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
   const height = await page.evaluate(() => document.documentElement.scrollHeight);
   await page.setViewport({ width: 430, height, deviceScaleFactor: 2 });
   return page;

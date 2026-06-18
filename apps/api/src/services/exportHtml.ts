@@ -65,7 +65,7 @@ export function renderShareHtml(snapshot: QuoteShareSnapshot): string {
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: "Noto Sans CJK SC", "Noto Sans SC", "WenQuanYi Zen Hei", "WenQuanYi Micro Hei", sans-serif;
       background: #f4f6fb;
       color: #4d5260;
       padding: 24px;

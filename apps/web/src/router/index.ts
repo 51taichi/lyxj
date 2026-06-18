@@ -30,6 +30,7 @@ const router = createRouter({
       meta: { requiresAuth: true, role: 'admin' },
     },
     { path: '/share/:id', component: () => import('../views/QuoteShareView.vue') },
+    { path: '/share/:id/image', component: () => import('../views/ShareImagePreviewView.vue') },
   ],
 })
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { api } from '../api/client'
 import type { Agency, BreakdownItem, Dimension, QuoteSelections, QuoteShareSnapshot } from '../types'
 import { BREAKDOWN_CATEGORY_LABELS, BREAKDOWN_CATEGORY_ORDER, type BreakdownCategory, groupBreakdown } from '../utils/breakdownGroups'
@@ -12,7 +13,6 @@ import {
 } from '../utils/customerMarkup'
 import { downloadBlob } from '../utils/exportImage'
 import { copyText, isWeChatBrowser } from '../utils/wechatEnv'
-import WechatImagePreviewSheet from './WechatImagePreviewSheet.vue'
 import WechatShareGuideSheet from './WechatShareGuideSheet.vue'
 import {
   buildDefaultItinerary,
@@ -44,6 +44,8 @@ const emit = defineEmits<{
   ]
 }>()
 
+const router = useRouter()
+
 const itinerary = ref<ItineraryState>({ days: [], pool: [] })
 const confirmed = ref(false)
 const meta = reactive({ arrivalDate: '' })
@@ -55,8 +57,6 @@ const pdfLoading = ref(false)
 const showShareGuide = ref(false)
 const shareLinkCopied = ref(false)
 const shareGuideMode = ref<'link' | 'pdf'>('link')
-const showImagePreview = ref(false)
-const imagePreviewUrl = ref('')
 const inWeChat = isWeChatBrowser()
 const agencies = ref<Agency[]>([])
 const selectedAgencyId = ref('')
@@ -330,23 +330,13 @@ async function generatePage() {
   showShareGuide.value = true
 }
 
-function closeImagePreview() {
-  showImagePreview.value = false
-  if (imagePreviewUrl.value) {
-    URL.revokeObjectURL(imagePreviewUrl.value)
-    imagePreviewUrl.value = ''
-  }
-}
-
 async function downloadShareImage() {
   if (!(await ensureShare())) return
   imageLoading.value = true
   shareError.value = ''
   try {
-    const blob = await api.exportImage(shareResult.value!.id)
-    closeImagePreview()
-    imagePreviewUrl.value = URL.createObjectURL(blob)
-    showImagePreview.value = true
+    await api.exportImage(shareResult.value!.id)
+    await router.push(`/share/${shareResult.value!.id}/image`)
   } catch (e) {
     shareError.value = e instanceof Error ? e.message : '图片生成失败'
   } finally {
@@ -629,12 +619,6 @@ async function downloadSharePdf() {
       :link-copied="shareLinkCopied"
       :mode="shareGuideMode"
       @close="showShareGuide = false"
-    />
-
-    <WechatImagePreviewSheet
-      :open="showImagePreview"
-      :image-url="imagePreviewUrl"
-      @close="closeImagePreview"
     />
 
     <!-- 拖动中的「元神」跟随指针 -->
