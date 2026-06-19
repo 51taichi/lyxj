@@ -12,6 +12,11 @@ import {
   defaultCustomerAmounts,
 } from '../utils/customerMarkup'
 import { downloadBlob } from '../utils/exportImage'
+import {
+  buildQuoteTextCopy,
+  defaultPeopleTag,
+  type QuoteTextPriceLine,
+} from '../utils/quoteTextCopy'
 import { copyText, isWeChatBrowser } from '../utils/wechatEnv'
 import WechatShareGuideSheet from './WechatShareGuideSheet.vue'
 import {
@@ -64,6 +69,16 @@ const costDetail = ref<BreakdownItem[]>([])
 const matchedPeriod = ref<{ id: string; name: string } | null>(null)
 const customerAmounts = reactive<Partial<Record<BreakdownCategory, number>>>({})
 const costLoading = ref(false)
+const textCopyLoading = ref(false)
+const textCopyCopied = ref(false)
+const textCopyPeopleTag = ref('')
+const textCopyPromotion = ref('')
+const textCopyFinalTotal = ref(0)
+const textCopyPriceLines = reactive<QuoteTextPriceLine[]>([
+  { label: '大人', pricePerPerson: 0, count: 0 },
+  { label: '60岁以上老人', pricePerPerson: 0, count: 0 },
+  { label: '小孩', pricePerPerson: 0, count: 0 },
+])
 
 const selectedAgency = computed(() => agencies.value.find((a) => a.id === selectedAgencyId.value))
 
@@ -127,6 +142,12 @@ const guideLabel = computed(() => {
 const nights = computed(() => Number(props.selections.nights ?? 0))
 const rooms = computed(() => Number(props.selections.rooms ?? 0))
 const vehicleDays = computed(() => Number(props.selections.vehicleDays ?? 0))
+const tripDays = computed(() => {
+  if (nights.value > 0) return nights.value + 1
+  const itineraryDays = itinerary.value.days.length
+  if (itineraryDays > 0) return itineraryDays
+  return vehicleDays.value || 1
+})
 
 const peopleLabel = computed(() => `${props.adults}大${props.children ? `${props.children}小` : ''}`)
 
@@ -361,6 +382,66 @@ async function downloadSharePdf() {
     pdfLoading.value = false
   }
 }
+
+function syncTextCopyDefaults() {
+  textCopyPeopleTag.value = defaultPeopleTag(props.adults, props.children)
+  textCopyFinalTotal.value = customerQuote.value.total
+  textCopyPriceLines[0].count = props.adults
+  textCopyPriceLines[1].count = 0
+  textCopyPriceLines[2].count = props.children
+}
+
+function updateTextCopyPrice(index: number, field: 'pricePerPerson' | 'count', raw: string) {
+  const n = parseInt(raw, 10)
+  textCopyPriceLines[index][field] = Math.max(0, Number.isFinite(n) ? n : 0)
+}
+
+function updateTextCopyFinalTotal(raw: string) {
+  const n = parseInt(raw, 10)
+  textCopyFinalTotal.value = Math.max(0, Number.isFinite(n) ? n : 0)
+}
+
+const quoteTextPreview = computed(() =>
+  buildQuoteTextCopy({
+    days: tripDays.value,
+    nights: nights.value,
+    peopleTag: textCopyPeopleTag.value,
+    hotelLabel: hotelLabel.value,
+    priceLines: textCopyPriceLines,
+    promotionLine: textCopyPromotion.value,
+    finalTotal: textCopyFinalTotal.value,
+    rooms: rooms.value,
+    vehicleDays: vehicleDays.value,
+    guideLabel: guideLabel.value,
+  }),
+)
+
+watch(
+  () => [props.adults, props.children, customerQuote.value.total],
+  () => {
+    if (!confirmed.value) return
+    syncTextCopyDefaults()
+  },
+)
+
+watch(confirmed, (v) => {
+  if (v) syncTextCopyDefaults()
+})
+
+async function copyQuoteText() {
+  textCopyLoading.value = true
+  textCopyCopied.value = false
+  shareError.value = ''
+  try {
+    const ok = await copyText(quoteTextPreview.value)
+    textCopyCopied.value = ok
+    if (!ok) shareError.value = '复制失败，请长按下方预览文字手动复制'
+  } catch (e) {
+    shareError.value = e instanceof Error ? e.message : '复制失败'
+  } finally {
+    textCopyLoading.value = false
+  }
+}
 </script>
 
 <template>
@@ -560,6 +641,83 @@ async function downloadSharePdf() {
       </div>
     </div>
 
+    <div v-if="confirmed" class="text-copy-panel">
+      <p class="text-copy-panel__title">文字版报价（复制前可调整）</p>
+      <div class="pax-row pax-row--meta">
+        <span class="pax-row__label">标题人数：</span>
+        <div class="pax-row__control">
+          <input v-model="textCopyPeopleTag" class="summary-field" type="text" placeholder="如 5+1，0购物0自费" />
+        </div>
+      </div>
+      <div v-for="(row, index) in textCopyPriceLines" :key="row.label" class="text-copy-price-row">
+        <span class="text-copy-price-row__label">{{ row.label }}</span>
+        <label class="text-copy-price-row__field">
+          <input
+            class="summary-price-field__input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            :value="row.pricePerPerson || ''"
+            placeholder="单价"
+            @input="updateTextCopyPrice(index, 'pricePerPerson', ($event.target as HTMLInputElement).value)"
+          />
+          <span class="summary-price-field__unit">元/人</span>
+        </label>
+        <label class="text-copy-price-row__field text-copy-price-row__field--count">
+          <input
+            class="summary-price-field__input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            :value="row.count || ''"
+            @input="updateTextCopyPrice(index, 'count', ($event.target as HTMLInputElement).value)"
+          />
+          <span class="summary-price-field__unit">人</span>
+        </label>
+      </div>
+      <div class="pax-row pax-row--meta">
+        <span class="pax-row__label">优惠说明：</span>
+        <div class="pax-row__control">
+          <input
+            v-model="textCopyPromotion"
+            class="summary-field"
+            type="text"
+            placeholder="如 当天预定享优惠福利：小孩免单1个，成人优惠100元一人"
+          />
+        </div>
+      </div>
+      <div class="pax-row pax-row--meta">
+        <span class="pax-row__label">优惠后总价：</span>
+        <div class="pax-row__control">
+          <label class="summary-price-field">
+            <input
+              class="summary-price-field__input"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              step="1"
+              :value="textCopyFinalTotal"
+              @input="updateTextCopyFinalTotal(($event.target as HTMLInputElement).value)"
+            />
+            <span class="summary-price-field__unit">元</span>
+          </label>
+        </div>
+      </div>
+      <textarea
+        class="text-copy-panel__preview"
+        :value="quoteTextPreview"
+        readonly
+        rows="12"
+        aria-label="文字版报价预览"
+        @focus="($event.target as HTMLTextAreaElement).select()"
+      />
+      <p v-if="textCopyCopied" class="step-hint step-hint--compact summary-step__hint summary-step__hint--ok">
+        已复制到剪贴板，可直接粘贴到微信发送
+      </p>
+    </div>
+
     <div v-if="!confirmed" class="summary-step__actions">
       <button
         type="button"
@@ -576,7 +734,7 @@ async function downloadSharePdf() {
         <button
           type="button"
           class="btn-outline summary-step__gen-btn"
-          :disabled="shareLoading || imageLoading || pdfLoading"
+          :disabled="shareLoading || imageLoading || pdfLoading || textCopyLoading"
           @click="generatePage"
         >
           {{ shareLoading ? '生成中…' : '发给客户（链接）' }}
@@ -584,7 +742,7 @@ async function downloadSharePdf() {
         <button
           type="button"
           class="btn-outline summary-step__gen-btn"
-          :disabled="shareLoading || imageLoading || pdfLoading"
+          :disabled="shareLoading || imageLoading || pdfLoading || textCopyLoading"
           @click="downloadShareImage"
         >
           {{ imageLoading ? '生成中…' : '生成长图' }}
@@ -592,10 +750,18 @@ async function downloadSharePdf() {
         <button
           type="button"
           class="btn-outline summary-step__gen-btn summary-step__gen-btn--secondary"
-          :disabled="shareLoading || imageLoading || pdfLoading"
+          :disabled="shareLoading || imageLoading || pdfLoading || textCopyLoading"
           @click="downloadSharePdf"
         >
           {{ pdfLoading ? '生成中…' : 'PDF（打印）' }}
+        </button>
+        <button
+          type="button"
+          class="btn-outline summary-step__gen-btn summary-step__gen-btn--secondary"
+          :disabled="shareLoading || imageLoading || pdfLoading || textCopyLoading"
+          @click="copyQuoteText"
+        >
+          {{ textCopyLoading ? '复制中…' : '复制文字' }}
         </button>
       </div>
 

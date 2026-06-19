@@ -190,10 +190,10 @@
 
       <!-- 住宿：酒店标准 + 晚数 + 间数同一步 -->
       <section v-else-if="isHotelStep" class="step-panel step-panel--flat pax-step">
-        <div class="pax-row pax-row--wrap">
+        <div class="pax-row pax-row--wrap pax-row--chip-grid">
           <span class="pax-row__label">酒店标准：</span>
           <div class="pax-row__control">
-            <div class="option-grid">
+            <div class="option-grid option-grid--3col">
               <button
                 v-for="opt in hotelOptions"
                 :key="opt.id"
@@ -239,10 +239,10 @@
             </div>
           </div>
         </div>
-        <div class="pax-row pax-row--wrap pax-row--vehicle-needs">
+        <div class="pax-row pax-row--wrap pax-row--chip-grid">
           <span class="pax-row__label">用车需求：</span>
           <div class="pax-row__control">
-            <div class="option-grid option-grid--vehicle-needs">
+            <div class="option-grid option-grid--3col">
               <button
                 v-for="opt in vehicleNeedsOptions"
                 :key="opt.id"
@@ -267,7 +267,7 @@
 
       <!-- 通用多选/单选 chips -->
       <section v-else-if="currentDim" class="step-panel step-panel--flat">
-        <div class="option-grid">
+        <div class="option-grid" :class="{ 'option-grid--3col': currentDim.id === 'guide' }">
           <button
             v-for="opt in visibleOptions"
             :key="opt.id"
