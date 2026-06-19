@@ -2,6 +2,10 @@ import { getDimensions, getMealAllowancePerPersonDay, getPricePeriods } from '..
 import { ATTRACTION_PASSES_KEY } from '../data/seed.js';
 import type { BreakdownItem, Dimension, DimensionOption, PriceFields, QuoteResult, QuoteSelections } from '../types.js';
 import { findMatchingPeriod, getEffectiveMealRate, getEffectivePriceFields } from '../utils/pricePeriod.js';
+import {
+  buildVehicleNeedDefs,
+  vehicleNeedSelected,
+} from '../utils/vehicleNeeds.js';
 
 function getDimension(id: string): Dimension {
   const dim = getDimensions().find((d) => d.id === id);
@@ -46,17 +50,11 @@ function isSet(value: unknown): boolean {
   return true;
 }
 
-const NEED_LABELS: Record<string, string> = {
-  city: '市内',
-  greatWall: '上长城',
-  pickup: '接站',
-  airport: '接机',
-  flag: '升旗',
-};
-
-function needSelected(needs: string[], key: string): boolean {
-  const label = NEED_LABELS[key] ?? key;
-  return needs.includes(key) || needs.includes(label);
+/** 餐补人数（仅司导，不含游客）：司兼导 1 人，独立/金牌导游 2 人 */
+function getMealStaffCount(guideOpt: DimensionOption | undefined): number {
+  if (!guideOpt) return 0;
+  if (guideOpt.id === 'driverGuide' || guideOpt.name.includes('司兼导')) return 1;
+  return 2;
 }
 
 export interface CalculateOptions {
@@ -136,29 +134,19 @@ export function calculateQuote(selections: QuoteSelections, options?: CalculateO
   const vehicleDays = isSet(selections.vehicleDays) ? asNumber(selections.vehicleDays, 1) : 0;
   const vehicleNeeds = asStringArray(selections.vehicleNeeds);
 
-  if (vehicleOpt && isSet(selections.vehicleDays) && needSelected(vehicleNeeds, 'city')) {
-    const dayRate = vf.cityDay ?? 0;
+  const vehicleNeedsDim = getDimension('vehicleNeeds');
+  const vehicleNeedDefs = buildVehicleNeedDefs(vehicleNeedsDim);
+
+  for (const def of vehicleNeedDefs) {
+    if (!vehicleOpt || !vehicleNeedSelected(vehicleNeeds, def)) continue;
+    if (!isSet(selections.vehicleDays)) continue;
+    const fee = vf[def.priceKey] ?? 0;
+    if (fee <= 0) continue;
     breakdown.push({
-      label: `市内用车·${vehicleName}（${dayRate}元/天×${vehicleDays}天）`,
-      amount: dayRate * vehicleDays,
+      label: `${def.needName}·${vehicleName}（${fee}元/天×${vehicleDays}天）`,
+      amount: fee * vehicleDays,
       category: 'vehicle',
     });
-  }
-  if (vehicleOpt && needSelected(vehicleNeeds, 'greatWall')) {
-    const fee = vf.greatWall ?? 0;
-    if (fee > 0) breakdown.push({ label: `上长城·${vehicleName}`, amount: fee, category: 'vehicle' });
-  }
-  if (vehicleOpt && needSelected(vehicleNeeds, 'pickup')) {
-    const fee = vf.pickup ?? 0;
-    if (fee > 0) breakdown.push({ label: `接站·${vehicleName}`, amount: fee, category: 'vehicle' });
-  }
-  if (vehicleOpt && needSelected(vehicleNeeds, 'airport')) {
-    const fee = vf.airport ?? 0;
-    if (fee > 0) breakdown.push({ label: `接机·${vehicleName}`, amount: fee, category: 'vehicle' });
-  }
-  if (vehicleOpt && needSelected(vehicleNeeds, 'flag')) {
-    const fee = vf.flag ?? 0;
-    if (fee > 0) breakdown.push({ label: `升旗用车·${vehicleName}`, amount: fee, category: 'vehicle' });
   }
 
   const hotelOpt = isSet(selections.hotel)
@@ -190,16 +178,12 @@ export function calculateQuote(selections: QuoteSelections, options?: CalculateO
   }
 
   const mealRate = getEffectiveMealRate(getMealAllowancePerPersonDay(), period);
-  if (
-    vehicleOpt &&
-    isSet(selections.vehicleDays) &&
-    mealRate > 0 &&
-    pax > 0 &&
-    needSelected(vehicleNeeds, 'city')
-  ) {
+  const mealStaff = getMealStaffCount(guideOpt);
+  if (isSet(selections.vehicleDays) && mealRate > 0 && mealStaff > 0 && guideOpt) {
+    const staffLabel = mealStaff === 1 ? '司兼导' : '司机+导游';
     breakdown.push({
-      label: `餐补（${mealRate}元/人/天×${pax}人×${vehicleDays}天）`,
-      amount: mealRate * pax * vehicleDays,
+      label: `餐补·${staffLabel}（${mealRate}元/人/天×${mealStaff}人×${vehicleDays}天）`,
+      amount: mealRate * mealStaff * vehicleDays,
       category: 'meal',
     });
   }

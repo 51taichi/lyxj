@@ -142,9 +142,9 @@
               class="admin-need-map step-panel step-panel--flat"
             >
               <p class="quote-field-label" style="margin-top: 0">需求与价格字段对应</p>
-              <p class="step-hint step-hint--compact">以下价格在「请选择车型」各车型下维护，此处仅改名称。</p>
+              <p class="step-hint step-hint--compact">新增需求后保存，「请选择车型」会自动出现对应价格列；所有需求均按「元/天 × 用车天数」计价。</p>
               <ul class="admin-need-map__list">
-                <li v-for="row in VEHICLE_NEED_PRICE_MAP" :key="row.needId">
+                <li v-for="row in vehicleNeedPriceMap" :key="row.needId">
                   <span class="admin-need-map__need">{{ row.needName }}</span>
                   <span class="admin-need-map__arrow">→</span>
                   <span class="admin-need-map__field">请选择车型 · {{ row.priceLabel }}</span>
@@ -162,7 +162,7 @@
             <article v-for="(opt, oi) in dim.options" :key="opt.id" class="admin-option admin-option--stack">
               <div class="admin-row admin-row--action admin-row--tight">
                 <input v-model="opt.name" class="quote-meta-input" placeholder="选项名称" />
-                <AdminIconButton icon="trash" label="删除选项" @click="dim.options!.splice(oi, 1)" />
+                <AdminIconButton icon="trash" label="删除选项" @click="removeOption(dim, oi)" />
               </div>
 
               <div
@@ -190,18 +190,38 @@
       </section>
       </div>
 
-      <section class="admin-dim admin-formula-section admin-dim--full">
+      <div class="admin-config-footer">
+      <section
+        class="admin-dim admin-meal-section"
+        :class="{ 'admin-dim--expanded': mealExpanded }"
+      >
+        <button type="button" class="admin-dim__head" @click="mealExpanded = !mealExpanded">
+          <span class="admin-dim__order">{{ sortedDimensions.length + 1 }}</span>
+          <span class="admin-dim__name">餐补</span>
+          <span class="btn-tag">标准价</span>
+          <span class="admin-dim__chev">{{ mealExpanded ? '▾' : '▸' }}</span>
+        </button>
+        <div v-show="mealExpanded" class="admin-dim__body step-panel step-panel--flat">
+          <p class="step-hint">餐补仅补贴司导，不含游客：司兼导 1 人，独立/金牌导游 2 人（司机+导游）。公式 = 单价 × 司导人数 × 用车天数</p>
+          <label class="quote-field-label">餐补单价（元/人/天）</label>
+          <input v-model.number="config.mealAllowancePerPersonDay" type="number" class="quote-meta-input" min="0" />
+          <p class="step-hint step-hint--compact">淡旺季可在上方时间段中单独覆盖餐补单价；与导服方式关联，与用车需求无关。</p>
+        </div>
+      </section>
+
+      <section
+        class="admin-dim admin-formula-section"
+        :class="{ 'admin-dim--expanded': formulaExpanded }"
+      >
         <button type="button" class="admin-dim__head" @click="formulaExpanded = !formulaExpanded">
           <span class="admin-dim__name">计价公式（docx）</span>
           <span class="admin-dim__chev">{{ formulaExpanded ? '▾' : '▸' }}</span>
         </button>
         <div v-show="formulaExpanded" class="admin-dim__body step-panel step-panel--flat">
           <p class="admin-formula__text">{{ config.formulaNote }}</p>
-          <label class="quote-field-label">餐补（元/人/天）</label>
-          <input v-model.number="config.mealAllowancePerPersonDay" type="number" class="quote-meta-input" min="0" />
-          <p class="step-hint">与用车天数、总人数相乘：餐补 × (成人+儿童) × 用车天数</p>
         </div>
       </section>
+      </div>
 
       <p v-if="message" class="admin-msg" :class="{ 'admin-msg--err': isError }">{{ message }}</p>
 
@@ -229,13 +249,19 @@ import {
   DIMENSION_PRICE_FIELDS,
   DIMENSION_TYPE_LABELS,
   STEP_HINTS,
-  VEHICLE_NEED_PRICE_MAP,
 } from '../utils/configSchema'
+import {
+  buildVehicleNeedDefs,
+  removeVehicleNeedFromVehicles,
+  syncVehicleOptionsWithNeeds,
+  vehiclePriceFieldsFromNeeds,
+} from '../utils/vehicleNeeds'
 
 const config = ref<SystemConfig | null>(null)
 const expanded = reactive<Record<string, boolean>>({})
 const periodExpanded = reactive<Record<string, boolean>>({})
 const formulaExpanded = ref(false)
+const mealExpanded = ref(false)
 const saving = ref(false)
 const message = ref('')
 const isError = ref(false)
@@ -251,11 +277,16 @@ const periodOverrideDimensions = computed(() =>
   sortedDimensions.value.filter((d) => PERIOD_OVERRIDE_DIM_IDS.includes(d.id) && d.options?.length),
 )
 
+const vehicleNeedsDim = computed(() => config.value?.dimensions.find((d) => d.id === 'vehicleNeeds'))
+const vehicleDim = computed(() => config.value?.dimensions.find((d) => d.id === 'vehicle'))
+const vehicleNeedPriceMap = computed(() => buildVehicleNeedDefs(vehicleNeedsDim.value))
+
 function typeLabel(type: string) {
   return DIMENSION_TYPE_LABELS[type] ?? type
 }
 
 function priceFieldsFor(dimId: string) {
+  if (dimId === 'vehicle') return vehiclePriceFieldsFromNeeds(vehicleNeedsDim.value)
   return DIMENSION_PRICE_FIELDS[dimId] ?? []
 }
 
@@ -299,7 +330,7 @@ function periodHeadLabel(period: PricePeriod) {
 function addOption(dim: Dimension) {
   if (!dim.options) dim.options = []
   const opt: DimensionOption = {
-    id: `opt_${Date.now()}`,
+    id: dim.id === 'vehicleNeeds' ? `need_${Date.now()}` : `opt_${Date.now()}`,
     name: '新选项',
     priceFields: {},
   }
@@ -307,6 +338,18 @@ function addOption(dim: Dimension) {
     opt.priceFields[pf.key] = 0
   }
   dim.options.push(opt)
+  if (dim.id === 'vehicleNeeds') {
+    syncVehicleOptionsWithNeeds(vehicleDim.value, dim)
+  }
+}
+
+function removeOption(dim: Dimension, index: number) {
+  const opt = dim.options?.[index]
+  if (!opt) return
+  if (dim.id === 'vehicleNeeds') {
+    removeVehicleNeedFromVehicles(vehicleDim.value, opt)
+  }
+  dim.options!.splice(index, 1)
 }
 
 function addPeriod() {
@@ -406,7 +449,14 @@ onMounted(load)
 
 <style scoped>
 .admin-formula-section {
-  margin-top: calc(4px * var(--scale));
+  margin-top: 0;
+}
+
+.admin-config-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-card);
+  margin-top: var(--space-card);
 }
 
 .admin-need-map {

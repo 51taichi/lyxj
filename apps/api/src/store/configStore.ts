@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildInitialConfig, defaultAgencies } from '../data/seed.js';
 import type { Agency, Dimension, PricePeriod, SystemConfig } from '../types.js';
+import { syncVehicleOptionsWithNeeds } from '../utils/vehicleNeeds.js';
 
 const CONFIG_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../data/config.json');
 
@@ -55,6 +56,10 @@ function migrateConfig(raw: SystemConfig & { mealAllowance?: number; mealAllowan
     pricePeriods: Array.isArray(raw.pricePeriods) ? raw.pricePeriods : fallback.pricePeriods,
   };
 
+  const vehicleDim = migrated.dimensions.find((d) => d.id === 'vehicle');
+  const vehicleNeedsDim = migrated.dimensions.find((d) => d.id === 'vehicleNeeds');
+  syncVehicleOptionsWithNeeds(vehicleDim, vehicleNeedsDim);
+
   if (JSON.stringify(migrated) !== JSON.stringify(raw)) {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(migrated, null, 2), 'utf8');
   }
@@ -68,8 +73,13 @@ export function loadConfig(): SystemConfig {
 }
 
 export function saveConfig(config: SystemConfig): SystemConfig {
+  const dimensions = config.dimensions.map((d) => ({ ...d, options: d.options?.map((o) => ({ ...o })) }));
+  const vehicleDim = dimensions.find((d) => d.id === 'vehicle');
+  const vehicleNeedsDim = dimensions.find((d) => d.id === 'vehicleNeeds');
+  syncVehicleOptionsWithNeeds(vehicleDim, vehicleNeedsDim);
+
   cache = {
-    dimensions: config.dimensions.map((d) => ({ ...d, options: d.options?.map((o) => ({ ...o })) })),
+    dimensions,
     mealAllowancePerPersonDay: config.mealAllowancePerPersonDay ?? 0,
     formulaNote: config.formulaNote,
     agencies: (config.agencies ?? defaultAgencies).map((a) => ({ ...a })),

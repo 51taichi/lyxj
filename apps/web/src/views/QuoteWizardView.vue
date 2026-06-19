@@ -239,10 +239,10 @@
             </div>
           </div>
         </div>
-        <div class="pax-row pax-row--wrap">
+        <div class="pax-row pax-row--wrap pax-row--vehicle-needs">
           <span class="pax-row__label">用车需求：</span>
           <div class="pax-row__control">
-            <div class="option-grid">
+            <div class="option-grid option-grid--vehicle-needs">
               <button
                 v-for="opt in vehicleNeedsOptions"
                 :key="opt.id"

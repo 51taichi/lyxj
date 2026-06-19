@@ -38,10 +38,10 @@ export const ADMIN_HINTS: Record<string, string> = {
   adults: '仅维护人数范围与默认值，无单价。',
   children: '仅维护人数范围与默认值，无单价。',
   vehicle:
-    '各车型分别维护用车价格：市内=日租×天数；长城/接站/接机/升旗=单次费。业务员勾选「用车需求项」时，按所选车型此处的价格计价。',
+    '各车型按「用车需求项」动态显示价格列，均为元/天 × 用车天数。最少/最多人数用于车型适配。',
   vehicleDays: '仅维护天数范围与默认值，无单价。',
   vehicleNeeds:
-    '此处只维护需求名称（市内、上长城等）。对应价格不在本项维护，请到「请选择车型」展开各车型，修改市内/长城/接站/接机/升旗等字段。',
+    '维护需求名称即可；保存后「请选择车型」各车型自动出现对应价格列。删除需求会同步移除车型上的价格列。',
   hotel: '每个酒店标准维护「每晚」单价（元/间/晚）。',
   guide: '每个导服选项维护整单导服费（元/整单）。',
   nights: '仅维护晚数范围与默认值，无单价。',
@@ -54,8 +54,8 @@ export const STEP_HINTS: Record<string, string> = {
   adults: '填写成人和小孩人数；门票按人头与已选景点单价相乘后求和。',
   children: '与已选景点儿童单价相乘后求和（向导中与成人同一步填写）。',
   vehicle: '根据上一步总人数自动预选合适车型；不适配的车型保留显示但不可选。',
-  vehicleDays: '填写用车天数，并勾选市内/上长城/接站/接机/升旗等需求。',
-  vehicleNeeds: '市内=日租×天数；上长城/接站/接机/升旗为单次费用（向导中与天数同一步填写）。',
+  vehicleDays: '填写用车天数，并勾选用车需求（均为按天计价）。',
+  vehicleNeeds: '勾选的需求按「车型价格/天 × 用车天数」计入报价（向导中与天数同一步填写）。',
   hotel: '选择酒店标准，并填写住宿晚数与房间数。',
   nights: '与酒店单价、间数相乘得出住宿费（向导中与酒店标准同一步填写）。',
   rooms: '与酒店单价、晚数相乘得出住宿费（向导中与酒店标准同一步填写）。',
@@ -67,18 +67,3 @@ export const DIMENSION_TYPE_LABELS: Record<string, string> = {
   single_select: '单选',
   number: '数字',
 }
-
-/** 用车需求项 id 与车型价格字段对应关系（管理端展示用） */
-export const VEHICLE_NEED_PRICE_MAP: {
-  needId: string
-  needName: string
-  priceKey: string
-  priceLabel: string
-  unit: string
-}[] = [
-  { needId: 'city', needName: '市内', priceKey: 'cityDay', priceLabel: '市内', unit: '元/天' },
-  { needId: 'greatWall', needName: '上长城', priceKey: 'greatWall', priceLabel: '长城', unit: '元/次' },
-  { needId: 'pickup', needName: '接站', priceKey: 'pickup', priceLabel: '接站', unit: '元/次' },
-  { needId: 'airport', needName: '接机', priceKey: 'airport', priceLabel: '接机', unit: '元/次' },
-  { needId: 'flag', needName: '升旗', priceKey: 'flag', priceLabel: '升旗', unit: '元/次' },
-]

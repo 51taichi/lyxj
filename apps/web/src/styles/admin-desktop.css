@@ -555,23 +555,43 @@
     gap: 6px 20px;
   }
 
-  .admin-formula-section.admin-dim--full {
-    max-width: 640px;
+  .admin-config-footer {
+    display: grid;
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
     margin-top: 8px;
+  }
+
+  .admin-formula-section,
+  .admin-meal-section {
+    max-width: none;
+    margin: 0;
     background: #fff;
     border: 1px solid var(--color-border);
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 1px 4px rgb(52 59 77 / 0.04);
+    min-width: 0;
   }
 
-  .admin-formula-section .admin-dim__head {
+  .admin-meal-section .admin-dim__body {
+    padding: 20px 22px;
+  }
+
+  .admin-meal-section .quote-meta-input {
+    max-width: 240px;
+  }
+
+  .admin-formula-section .admin-dim__head,
+  .admin-meal-section .admin-dim__head {
     box-shadow: none;
     border-bottom: 1px solid var(--color-border);
     border-radius: 0;
   }
 
-  .admin-formula-section .admin-dim__body {
+  .admin-formula-section .admin-dim__body,
+  .admin-meal-section .admin-dim__body {
     margin-top: 0;
     padding: 18px 22px;
     border: none;

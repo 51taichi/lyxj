@@ -11,6 +11,8 @@ export interface DimensionOption {
   priceFields: Record<string, number>
   isDefault?: boolean
   linkedAttraction?: string
+  /** 用车需求：按天计费（×用车天数），默认按次 */
+  isDailyRate?: boolean
 }
 
 export interface Dimension {
