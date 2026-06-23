@@ -6,6 +6,14 @@ export interface VehicleNeedDef {
   priceKey: string;
   unit: string;
   priceLabel: string;
+  /** 市内按天×用车天数；其余默认按次 */
+  isDailyRate: boolean;
+}
+
+/** 是否按天计费（仅市内；可配置 isDailyRate 覆盖） */
+export function isVehicleNeedDaily(need: DimensionOption): boolean {
+  if (need.isDailyRate !== undefined) return need.isDailyRate;
+  return need.id === 'city';
 }
 
 /** 车型 priceFields 中对应的价格键；市内沿用 cityDay，其余与需求 id 相同 */
@@ -16,13 +24,17 @@ export function getVehicleNeedPriceKey(need: DimensionOption): string {
 
 export function buildVehicleNeedDefs(vehicleNeedsDim: Dimension | undefined): VehicleNeedDef[] {
   if (!vehicleNeedsDim?.options?.length) return [];
-  return vehicleNeedsDim.options.map((need) => ({
-    needId: need.id,
-    needName: need.name,
-    priceKey: getVehicleNeedPriceKey(need),
-    unit: '元/天',
-    priceLabel: need.name,
-  }));
+  return vehicleNeedsDim.options.map((need) => {
+    const daily = isVehicleNeedDaily(need);
+    return {
+      needId: need.id,
+      needName: need.name,
+      priceKey: getVehicleNeedPriceKey(need),
+      unit: daily ? '元/天' : '元/次',
+      priceLabel: need.name,
+      isDailyRate: daily,
+    };
+  });
 }
 
 export function vehicleNeedSelected(selected: string[], need: VehicleNeedDef): boolean {

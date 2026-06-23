@@ -22,6 +22,7 @@ import WechatShareGuideSheet from './WechatShareGuideSheet.vue'
 import {
   buildDefaultItinerary,
   dayLabel,
+  DEFAULT_ITINERARY_DAYS,
   formatArrivalDisplay,
   formatDayLine,
   serializeItinerary,
@@ -52,6 +53,7 @@ const emit = defineEmits<{
 const router = useRouter()
 
 const itinerary = ref<ItineraryState>({ days: [], pool: [] })
+const itineraryDayCount = ref(DEFAULT_ITINERARY_DAYS)
 const confirmed = ref(false)
 const meta = reactive({ arrivalDate: '' })
 const shareLoading = ref(false)
@@ -105,18 +107,23 @@ const {
 } = useItineraryPointerDrag(itinerary, () => !confirmed.value)
 
 watch(
-  () => [
-    JSON.stringify(props.selections.attractions ?? []),
-    props.selections.vehicleDays,
-    props.selections.vehicleNeeds,
-  ],
+  () => [JSON.stringify(props.selections.attractions ?? []), props.selections.vehicleNeeds],
   () => {
     if (!confirmed.value) {
-      itinerary.value = buildDefaultItinerary(props.selections, props.dimensions)
+      itinerary.value = buildDefaultItinerary(
+        props.selections,
+        props.dimensions,
+        itineraryDayCount.value,
+      )
     }
   },
   { immediate: true },
 )
+
+watch(itineraryDayCount, (count) => {
+  if (confirmed.value) return
+  itinerary.value = buildDefaultItinerary(props.selections, props.dimensions, count)
+})
 
 const hotelLabel = computed(() => {
   const dim = props.dimensions.find((d) => d.id === 'hotel')
@@ -143,11 +150,18 @@ const nights = computed(() => Number(props.selections.nights ?? 0))
 const rooms = computed(() => Number(props.selections.rooms ?? 0))
 const vehicleDays = computed(() => Number(props.selections.vehicleDays ?? 0))
 const tripDays = computed(() => {
-  if (nights.value > 0) return nights.value + 1
-  const itineraryDays = itinerary.value.days.length
-  if (itineraryDays > 0) return itineraryDays
-  return vehicleDays.value || 1
+  const days = itinerary.value.days.length
+  if (days > 0) return days
+  return itineraryDayCount.value
 })
+
+function changeItineraryDayCount(delta: number) {
+  if (confirmed.value) return
+  const dim = props.dimensions.find((d) => d.id === 'vehicleDays')
+  const min = 1
+  const max = dim?.max ?? 14
+  itineraryDayCount.value = Math.min(max, Math.max(min, itineraryDayCount.value + delta))
+}
 
 const peopleLabel = computed(() => `${props.adults}大${props.children ? `${props.children}小` : ''}`)
 
@@ -286,6 +300,7 @@ function editItinerary() {
   confirmed.value = false
   shareResult.value = null
   shareError.value = ''
+  itineraryDayCount.value = itinerary.value.days.length || DEFAULT_ITINERARY_DAYS
 }
 
 function buildSharePayload(): QuoteShareSnapshot {
@@ -304,7 +319,7 @@ function buildSharePayload(): QuoteShareSnapshot {
       hotelLabel: hotelLabel.value,
       stayLabel: stayLabel.value,
       transportLine: transportLine.value,
-      title: `${vehicleDays.value || itinerary.value.days.length}日定制游`,
+      title: `${tripDays.value}日定制游`,
       matchedPeriodName: matchedPeriod.value?.name,
       markupPercent: effectiveMarkupPercent.value,
     },
@@ -488,6 +503,20 @@ async function copyQuoteText() {
         <div class="pax-row__control summary-field-text">{{ transportLine || '—' }}</div>
       </div>
     </div>
+
+    <div v-if="!confirmed" class="pax-row">
+      <span class="pax-row__label">行程天数：</span>
+      <div class="pax-row__control">
+        <div class="number-stepper">
+          <button type="button" class="number-stepper__btn" @click="changeItineraryDayCount(-1)">−</button>
+          <span class="number-stepper__value">{{ itineraryDayCount }}</span>
+          <button type="button" class="number-stepper__btn" @click="changeItineraryDayCount(1)">+</button>
+        </div>
+      </div>
+    </div>
+    <p v-if="!confirmed" class="step-hint step-hint--compact">
+      呈现给客户的行程天数，默认 {{ DEFAULT_ITINERARY_DAYS }} 天，与用车天数无关，可按需调整
+    </p>
 
     <!-- 每日行程 -->
     <template v-for="(day, dayIndex) in itinerary.days" :key="dayIndex">

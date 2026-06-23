@@ -74,7 +74,6 @@ export function calculateQuote(selections: QuoteSelections, options?: CalculateO
 
   const adults = isSet(selections.adults) ? asNumber(selections.adults, 0) : 0;
   const children = isSet(selections.children) ? asNumber(selections.children, 0) : 0;
-  const pax = adults + children;
   const attractionKeys = asStringArray(selections.attractions);
   const passKeys = asStringArray(selections[ATTRACTION_PASSES_KEY]);
 
@@ -118,10 +117,10 @@ export function calculateQuote(selections: QuoteSelections, options?: CalculateO
     const opt = getEffectiveOption('attractions', key, period);
     if (!opt) continue;
     const passAddon = opt.priceFields.passAddon ?? 0;
-    if (passAddon <= 0 || pax <= 0) continue;
+    if (passAddon <= 0 || adults <= 0) continue;
     breakdown.push({
-      label: `通票·${opt.name}（${passAddon}元/人×${pax}人）`,
-      amount: passAddon * pax,
+      label: `通票·${opt.name}（${passAddon}元/人×${adults}成人）`,
+      amount: passAddon * adults,
       category: 'ticket',
     });
   }
@@ -139,14 +138,22 @@ export function calculateQuote(selections: QuoteSelections, options?: CalculateO
 
   for (const def of vehicleNeedDefs) {
     if (!vehicleOpt || !vehicleNeedSelected(vehicleNeeds, def)) continue;
-    if (!isSet(selections.vehicleDays)) continue;
     const fee = vf[def.priceKey] ?? 0;
     if (fee <= 0) continue;
-    breakdown.push({
-      label: `${def.needName}·${vehicleName}（${fee}元/天×${vehicleDays}天）`,
-      amount: fee * vehicleDays,
-      category: 'vehicle',
-    });
+    if (def.isDailyRate) {
+      if (!isSet(selections.vehicleDays)) continue;
+      breakdown.push({
+        label: `${def.needName}·${vehicleName}（${fee}元/天×${vehicleDays}天）`,
+        amount: fee * vehicleDays,
+        category: 'vehicle',
+      });
+    } else {
+      breakdown.push({
+        label: `${def.needName}·${vehicleName}（${fee}元/次）`,
+        amount: fee,
+        category: 'vehicle',
+      });
+    }
   }
 
   const hotelOpt = isSet(selections.hotel)

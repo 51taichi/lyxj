@@ -2,10 +2,12 @@
   /*
    * Figma 画布 1200px（@2x）→ 逻辑宽 600px。
    * --scale 必须是无单位比值（px ÷ px），否则 calc 失效、图片会撑满原图尺寸。
+   * --layout-width 专供 scale 计算；PC 管理端可把 --page-max-width 设为 none 而不弄坏 scale。
    */
-  --page-max-width: 430px;
+  --layout-width: 430px;
+  --page-max-width: var(--layout-width);
   --design-width: 600px;
-  --scale: calc(min(100vw, var(--page-max-width)) / var(--design-width));
+  --scale: calc(min(100vw, var(--layout-width)) / var(--design-width));
 
   /* Brand colors */
   --color-primary: #5788f8;

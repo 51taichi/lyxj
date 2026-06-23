@@ -2019,3 +2019,41 @@
   display: none;
 }
 
+/* 销售核价向导 / 分享页：PC 宽屏居中手机框，避免 scale 异常时布局撑破 */
+@media (min-width: 960px) {
+  body:has(.phone-frame:not(.admin-page):not(.login-page)) {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 24px 16px;
+    box-sizing: border-box;
+  }
+
+  .phone-frame:not(.admin-page):not(.login-page) {
+    --layout-width: 430px;
+    --page-max-width: 430px;
+    --scale: calc(var(--layout-width) / var(--design-width));
+    width: 100%;
+    max-width: 430px;
+    min-height: min(100dvh, 920px);
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--color-bg-page);
+    box-shadow: 0 12px 48px rgba(52, 59, 77, 0.12);
+  }
+
+  .phone-frame:not(.admin-page):not(.login-page) .page-bg {
+    max-width: 430px;
+    left: 50%;
+    right: auto;
+    width: 100%;
+    transform: translateX(-50%);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .phone-frame:not(.admin-page):not(.login-page) .price-dock {
+    max-width: 430px;
+  }
+}

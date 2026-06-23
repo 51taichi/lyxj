@@ -54,12 +54,16 @@ export function serializeItinerary(state: ItineraryState): Record<string, string
   return out
 }
 
-/** 按用车天数生成默认行程（接站/入住、景点分配、返程） */
+/** 汇总页默认行程天数（与用车天数无关，客服可调整） */
+export const DEFAULT_ITINERARY_DAYS = 4
+
+/** 按行程天数生成默认行程（接站/入住、景点分配、返程） */
 export function buildDefaultItinerary(
   selections: QuoteSelections,
   dimensions: Dimension[],
+  dayCount = DEFAULT_ITINERARY_DAYS,
 ): ItineraryState {
-  const dayCount = Math.max(1, Number(selections.vehicleDays) || 3)
+  const daysTotal = Math.max(1, dayCount)
   const needs = asArray(selections.vehicleNeeds)
   const attractionsDim = dimensions.find((d) => d.id === 'attractions')
 
@@ -68,7 +72,7 @@ export function buildDefaultItinerary(
     return { id: `attr:${id}`, label: opt?.name ?? id }
   })
 
-  const days: ItineraryItem[][] = Array.from({ length: dayCount }, () => [])
+  const days: ItineraryItem[][] = Array.from({ length: daysTotal }, () => [])
 
   if (needSelected(needs, 'pickup')) {
     days[0].push({ id: '__pickup', label: '接站' })
@@ -77,22 +81,22 @@ export function buildDefaultItinerary(
   }
   days[0].push({ id: '__checkin', label: '入住酒店' })
 
-  if (dayCount === 1) {
+  if (daysTotal === 1) {
     days[0].push(...attractionItems)
     days[0].push({ id: '__return', label: '返程' })
     return { days, pool: [] }
   }
 
   let attrIndex = 0
-  for (let d = 1; d < dayCount - 1 && attrIndex < attractionItems.length; d++) {
+  for (let d = 1; d < daysTotal - 1 && attrIndex < attractionItems.length; d++) {
     days[d].push(attractionItems[attrIndex])
     attrIndex++
   }
   while (attrIndex < attractionItems.length) {
-    days[dayCount - 1].push(attractionItems[attrIndex])
+    days[daysTotal - 1].push(attractionItems[attrIndex])
     attrIndex++
   }
-  days[dayCount - 1].push({ id: '__return', label: '返程' })
+  days[daysTotal - 1].push({ id: '__return', label: '返程' })
 
   return { days, pool: [] }
 }

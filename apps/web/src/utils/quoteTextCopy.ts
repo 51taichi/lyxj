@@ -40,7 +40,6 @@ export function buildQuoteTextCopy(params: QuoteTextCopyParams): string {
     promotionLine,
     finalTotal,
     rooms,
-    vehicleDays,
     guideLabel,
   } = params
 
@@ -61,10 +60,10 @@ export function buildQuoteTextCopy(params: QuoteTextCopyParams): string {
   lines.push(`🏠2.${nights}晚酒店住宿，${rooms}间房`)
   lines.push('🍛3.每个床位一份早餐')
   lines.push(
-    `🙋🏻‍♂4.行程${vehicleDays}天导游服务(行程内市区9小时，上山10小时，因司导需开车，安全考虑。长城不陪爬）`,
+    `🙋🏻‍♂4.行程${days}天导游服务(行程内市区9小时，上山10小时，因司导需开车，安全考虑。长城不陪爬）`,
   )
   lines.push(
-    `🤵5.行程${vehicleDays}天用车服务，共${vehicleDays}天；(${guideServiceNote(guideLabel)}）`,
+    `🤵5.行程${days}天用车服务，共${days}天；(${guideServiceNote(guideLabel)}）`,
   )
   lines.push('🎫6.行程景点门票')
   lines.push('[福]7.旅行社责任险；')

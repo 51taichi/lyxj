@@ -2,6 +2,7 @@
 
 @media (min-width: 960px) {
   .admin-layout {
+    --layout-width: 430px;
     --page-max-width: none;
     --scale: 1;
     --space-page-x: 24px;

@@ -404,6 +404,7 @@ onMounted(async () => {
 
 @media (min-width: 960px) {
   .login-page {
+    --layout-width: 430px;
     --page-max-width: none;
     --scale: 1;
     display: flex;

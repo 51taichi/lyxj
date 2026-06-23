@@ -6,6 +6,12 @@ export interface VehicleNeedDef {
   priceKey: string
   unit: string
   priceLabel: string
+  isDailyRate: boolean
+}
+
+export function isVehicleNeedDaily(need: DimensionOption): boolean {
+  if (need.isDailyRate !== undefined) return need.isDailyRate
+  return need.id === 'city'
 }
 
 export interface VehiclePriceFieldDef {
@@ -22,13 +28,17 @@ export function getVehicleNeedPriceKey(need: DimensionOption): string {
 
 export function buildVehicleNeedDefs(vehicleNeedsDim: Dimension | undefined): VehicleNeedDef[] {
   if (!vehicleNeedsDim?.options?.length) return []
-  return vehicleNeedsDim.options.map((need) => ({
-    needId: need.id,
-    needName: need.name,
-    priceKey: getVehicleNeedPriceKey(need),
-    unit: '元/天',
-    priceLabel: need.name,
-  }))
+  return vehicleNeedsDim.options.map((need) => {
+    const daily = isVehicleNeedDaily(need)
+    return {
+      needId: need.id,
+      needName: need.name,
+      priceKey: getVehicleNeedPriceKey(need),
+      unit: daily ? '元/天' : '元/次',
+      priceLabel: need.name,
+      isDailyRate: daily,
+    }
+  })
 }
 
 export function vehiclePriceFieldsFromNeeds(vehicleNeedsDim: Dimension | undefined): VehiclePriceFieldDef[] {
