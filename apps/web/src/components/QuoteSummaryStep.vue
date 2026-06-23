@@ -174,7 +174,7 @@ const transportLine = computed(() => {
   if (!vehicleLabel.value) return ''
   const parts = [vehicleLabel.value]
   if (guideLabel.value) parts.push(guideLabel.value)
-  if (vehicleDays.value) parts.push(`${vehicleDays.value}天行程`)
+  if (vehicleDays.value) parts.push(`用车${vehicleDays.value}天`)
   return parts.join(' · ')
 })
 
@@ -502,20 +502,21 @@ async function copyQuoteText() {
         <span class="pax-row__label">用车导服：</span>
         <div class="pax-row__control summary-field-text">{{ transportLine || '—' }}</div>
       </div>
-    </div>
 
-    <div v-if="!confirmed" class="pax-row">
-      <span class="pax-row__label">行程天数：</span>
-      <div class="pax-row__control">
-        <div class="number-stepper">
-          <button type="button" class="number-stepper__btn" @click="changeItineraryDayCount(-1)">−</button>
-          <span class="number-stepper__value">{{ itineraryDayCount }}</span>
-          <button type="button" class="number-stepper__btn" @click="changeItineraryDayCount(1)">+</button>
+      <div class="pax-row pax-row--meta summary-meta-grid__trip-days">
+        <span class="pax-row__label">行程天数：</span>
+        <div class="pax-row__control">
+          <div v-if="!confirmed" class="number-stepper number-stepper--compact">
+            <button type="button" class="number-stepper__btn" @click="changeItineraryDayCount(-1)">−</button>
+            <span class="number-stepper__value">{{ itineraryDayCount }}</span>
+            <button type="button" class="number-stepper__btn" @click="changeItineraryDayCount(1)">+</button>
+          </div>
+          <div v-else class="summary-field-text">{{ tripDays }}天</div>
         </div>
       </div>
     </div>
-    <p v-if="!confirmed" class="step-hint step-hint--compact">
-      呈现给客户的行程天数，默认 {{ DEFAULT_ITINERARY_DAYS }} 天，与用车天数无关，可按需调整
+    <p v-if="!confirmed" class="step-hint step-hint--compact summary-step__trip-hint">
+      呈现给客户的行程天数，默认 {{ DEFAULT_ITINERARY_DAYS }} 天，与用车天数无关
     </p>
 
     <!-- 每日行程 -->

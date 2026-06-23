@@ -738,6 +738,19 @@
   line-height: 1.4;
 }
 
+.summary-meta-grid__trip-days {
+  grid-column: 1 / -1;
+}
+
+.summary-meta-grid .number-stepper--compact {
+  justify-content: flex-start;
+}
+
+.summary-step__trip-hint {
+  margin-top: calc(-4px * var(--scale));
+  margin-bottom: calc(10px * var(--scale));
+}
+
 .summary-divider {
   height: 1px;
   margin: calc(16px * var(--scale)) 0;
