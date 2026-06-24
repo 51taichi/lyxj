@@ -7,6 +7,8 @@
   --layout-width: 430px;
   --page-max-width: var(--layout-width);
   --design-width: 600px;
+  /* 回退值：calc 因无效变量失败时仍能正常缩放（避免 PC 端整页布局崩溃） */
+  --scale: 0.7166666667;
   --scale: calc(min(100vw, var(--layout-width)) / var(--design-width));
 
   /* Brand colors */

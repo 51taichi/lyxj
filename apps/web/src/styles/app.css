@@ -432,15 +432,27 @@
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--color-border);
   box-shadow: 0 calc(4px * var(--scale)) calc(16px * var(--scale)) rgba(52, 59, 77, 0.06);
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
 }
 
 .quote-top .hero {
   padding-top: calc(4px * var(--scale));
-  padding-bottom: calc(10px * var(--scale));
+  padding-bottom: calc(6px * var(--scale));
+  overflow: hidden;
+}
+
+.quote-top .hero__monster {
+  z-index: 0;
+  opacity: 0.92;
 }
 
 .quote-top .summary-card {
+  top: 0;
   margin-bottom: calc(12px * var(--scale));
+  position: relative;
+  z-index: 1;
 }
 
 .quote-top .wizard-progress {
@@ -999,12 +1011,12 @@
 
 .spot-grid .spot-card {
   margin-bottom: 0;
-  padding: calc(12px * var(--scale));
+  padding: calc(10px * var(--scale)) calc(12px * var(--scale));
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   height: 100%;
-  min-height: calc(64px * var(--scale));
+  min-height: calc(56px * var(--scale));
   box-sizing: border-box;
 }
 
@@ -1029,7 +1041,13 @@
 
 .spot-grid .spot-card__row {
   flex: 1;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: calc(6px * var(--scale));
+}
+
+.spot-grid .spot-card__pass-slot {
+  align-self: flex-end;
 }
 
 .spot-card__select {
@@ -1125,14 +1143,12 @@
 .spot-grid .spot-card__name {
   flex: 1;
   min-width: 0;
-  font-size: var(--fs-card-title);
+  font-size: var(--fs-body);
   font-weight: 600;
   line-height: 1.35;
   color: var(--color-text-secondary);
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .spot-card__name {
@@ -2044,11 +2060,11 @@
   }
 
   .phone-frame:not(.admin-page):not(.login-page) {
-    --layout-width: 430px;
-    --page-max-width: 430px;
-    --scale: calc(var(--layout-width) / var(--design-width));
+    --layout-width: 600px;
+    --page-max-width: 600px;
+    --scale: 1;
     width: 100%;
-    max-width: 430px;
+    max-width: 600px;
     min-height: min(100dvh, 920px);
     border-radius: 20px;
     overflow: hidden;
@@ -2057,7 +2073,7 @@
   }
 
   .phone-frame:not(.admin-page):not(.login-page) .page-bg {
-    max-width: 430px;
+    max-width: 600px;
     left: 50%;
     right: auto;
     width: 100%;
@@ -2067,6 +2083,10 @@
   }
 
   .phone-frame:not(.admin-page):not(.login-page) .price-dock {
-    max-width: 430px;
+    max-width: 600px;
+  }
+
+  .phone-frame:not(.admin-page):not(.login-page) .spot-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
