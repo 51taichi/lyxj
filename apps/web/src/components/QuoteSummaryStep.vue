@@ -28,6 +28,7 @@ import {
   serializeItinerary,
   type ItineraryState,
 } from '../utils/itinerary'
+import { isDriverGuideSelection } from '../utils/guide'
 import { useItineraryPointerDrag } from '../utils/useItineraryPointerDrag'
 
 const props = defineProps<{
@@ -146,6 +147,12 @@ const guideLabel = computed(() => {
   return opt?.name ?? ''
 })
 
+const guideDim = computed(() => props.dimensions.find((d) => d.id === 'guide'))
+const guideDays = computed(() => Number(props.selections.guideDays ?? 0))
+const needsGuideDays = computed(() =>
+  !isDriverGuideSelection(String(props.selections.guide ?? ''), guideDim.value),
+)
+
 const nights = computed(() => Number(props.selections.nights ?? 0))
 const rooms = computed(() => Number(props.selections.rooms ?? 0))
 const vehicleDays = computed(() => Number(props.selections.vehicleDays ?? 0))
@@ -173,7 +180,13 @@ const stayLabel = computed(() => {
 const transportLine = computed(() => {
   if (!vehicleLabel.value) return ''
   const parts = [vehicleLabel.value]
-  if (guideLabel.value) parts.push(guideLabel.value)
+  if (guideLabel.value) {
+    if (needsGuideDays.value && guideDays.value > 0) {
+      parts.push(`${guideLabel.value}·讲解${guideDays.value}天`)
+    } else {
+      parts.push(guideLabel.value)
+    }
+  }
   if (vehicleDays.value) parts.push(`用车${vehicleDays.value}天`)
   return parts.join(' · ')
 })

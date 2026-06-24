@@ -47,6 +47,11 @@ function migrateConfig(raw: SystemConfig & { mealAllowance?: number; mealAllowan
     }
   }
 
+  if (!dimensions.some((d) => d.id === 'guideDays')) {
+    const seedGuideDays = fallback.dimensions.find((d) => d.id === 'guideDays');
+    if (seedGuideDays) dimensions.push({ ...seedGuideDays });
+  }
+
   const migrated: SystemConfig = {
     dimensions,
     mealAllowancePerPersonDay:

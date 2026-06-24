@@ -10,7 +10,7 @@ export const defaultAdminUser = {
 };
 
 export const DOCX_FORMULA_NOTE =
-  'Σ(景点成人价)×成人数 + Σ(景点儿童价)×小孩数 + Σ(通票×成人数) + 市内×用车天数 + 其他用车需求×次 + 酒店×晚×间 + 导服(整单) + 餐补×司导人数×天数';
+  'Σ(景点成人价)×成人数 + Σ(景点儿童价)×小孩数 + Σ(通票×成人数) + 市内×用车天数 + 其他用车需求×次 + 酒店×晚×间 + 独立导游单价×讲解天数 + 餐补×司导人数×天数';
 
 /** 业务员选择「通票」的景点 id 列表（非独立维度，存在 selections.attractionPasses） */
 export const ATTRACTION_PASSES_KEY = 'attractionPasses';
@@ -149,6 +149,16 @@ export const dimensions: Dimension[] = [
       { id: 'guide', name: '独立导游', priceFields: { feeDay: 600 } },
       { id: 'goldGuide', name: '金牌导游', priceFields: { feeDay: 900 } },
     ],
+  },
+  {
+    id: 'guideDays',
+    name: '讲解天数',
+    type: 'number',
+    sortOrder: 11,
+    required: true,
+    min: 1,
+    max: 6,
+    defaultValue: 3,
   },
 ];
 

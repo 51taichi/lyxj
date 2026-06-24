@@ -6,6 +6,7 @@ import {
   buildVehicleNeedDefs,
   vehicleNeedSelected,
 } from '../utils/vehicleNeeds.js';
+import { isDriverGuideOption } from '../utils/guide.js';
 
 function getDimension(id: string): Dimension {
   const dim = getDimensions().find((d) => d.id === id);
@@ -53,7 +54,7 @@ function isSet(value: unknown): boolean {
 /** 餐补人数（仅司导，不含游客）：司兼导 1 人，独立/金牌导游 2 人 */
 function getMealStaffCount(guideOpt: DimensionOption | undefined): number {
   if (!guideOpt) return 0;
-  if (guideOpt.id === 'driverGuide' || guideOpt.name.includes('司兼导')) return 1;
+  if (isDriverGuideOption(guideOpt)) return 1;
   return 2;
 }
 
@@ -175,12 +176,23 @@ export function calculateQuote(selections: QuoteSelections, options?: CalculateO
     : undefined;
   if (guideOpt) {
     const guideFee = guideOpt.priceFields.feeDay ?? guideOpt.priceFields.fee ?? 0;
-    if (guideFee > 0) {
-      breakdown.push({
-        label: `导服·${guideOpt.name}（整单 ${guideFee} 元）`,
-        amount: guideFee,
-        category: 'guide',
-      });
+    if (isDriverGuideOption(guideOpt)) {
+      if (guideFee > 0) {
+        breakdown.push({
+          label: `导服·${guideOpt.name}（整单 ${guideFee} 元）`,
+          amount: guideFee,
+          category: 'guide',
+        });
+      }
+    } else if (guideFee > 0 && isSet(selections.guideDays)) {
+      const guideDays = asNumber(selections.guideDays, 1);
+      if (guideDays > 0) {
+        breakdown.push({
+          label: `导服·${guideOpt.name}（${guideFee}元/天×${guideDays}天）`,
+          amount: guideFee * guideDays,
+          category: 'guide',
+        });
+      }
     }
   }
 

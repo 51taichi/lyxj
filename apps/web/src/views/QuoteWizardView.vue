@@ -103,7 +103,11 @@
                 ? '请选择酒店标准并填写住宿晚数、房间数'
                 : isVehicleUseStep
                   ? '请填写用车天数并至少选择一项用车需求'
-                  : `请完成「${currentDim.name}」`
+                  : isGuideStep
+                    ? needsGuideDays
+                      ? '请选择导服方式并填写讲解天数'
+                      : '请选择导服方式'
+                    : `请完成「${currentDim.name}」`
         }}
       </p>
       <!-- 景点：名称 + 通票 -->
@@ -265,9 +269,38 @@
         </div>
       </section>
 
+      <!-- 导服：方式 + 讲解天数（司兼导除外） -->
+      <section v-else-if="isGuideStep" class="step-panel step-panel--flat pax-step">
+        <div class="pax-row pax-row--wrap pax-row--chip-grid">
+          <span class="pax-row__label">导服方式：</span>
+          <div class="pax-row__control">
+            <div class="option-grid option-grid--3col">
+              <button
+                v-for="opt in guideOptions"
+                :key="opt.id"
+                type="button"
+                class="option-chip"
+                :class="{ 'option-chip--active': isSelected('guide', opt) }"
+                @click="toggleGuideOption(opt)"
+              >{{ opt.name }}</button>
+            </div>
+          </div>
+        </div>
+        <div v-if="needsGuideDays" class="pax-row">
+          <span class="pax-row__label">讲解天数：</span>
+          <div class="pax-row__control">
+            <div class="number-stepper">
+              <button type="button" class="number-stepper__btn" @click="changeNumber('guideDays', -1)">−</button>
+              <span class="number-stepper__value">{{ guideDaysDisplay }}</span>
+              <button type="button" class="number-stepper__btn" @click="changeNumber('guideDays', 1)">+</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 通用多选/单选 chips -->
       <section v-else-if="currentDim" class="step-panel step-panel--flat">
-        <div class="option-grid" :class="{ 'option-grid--3col': currentDim.id === 'guide' }">
+        <div class="option-grid">
           <button
             v-for="opt in visibleOptions"
             :key="opt.id"
@@ -362,6 +395,7 @@ import QuoteSummaryStep from '../components/QuoteSummaryStep.vue'
 import { api } from '../api/client'
 import type { BreakdownItem, Dimension, DimensionOption, QuoteSelections } from '../types'
 import { STEP_HINTS, ATTRACTION_PASSES_KEY, WIZARD_HIDDEN_DIM_IDS } from '../utils/configSchema'
+import { isDriverGuideSelection } from '../utils/guide'
 
 const dimensions = ref<Dimension[]>([])
 const selections = reactive<QuoteSelections>({})
@@ -395,7 +429,9 @@ const steps = computed(() => [
           ? '请选择住宿'
           : d.id === 'vehicleDays'
             ? '请选择用车'
-            : d.name,
+            : d.id === 'guide'
+              ? '请选择导服'
+              : d.name,
   })),
   { id: 'summary', name: '方案汇总' },
 ])
@@ -411,12 +447,22 @@ const isSummaryStep = computed(() => currentStepId.value === 'summary')
 const isPaxStep = computed(() => currentStepId.value === 'adults')
 const isHotelStep = computed(() => currentStepId.value === 'hotel')
 const isVehicleUseStep = computed(() => currentStepId.value === 'vehicleDays')
+const isGuideStep = computed(() => currentStepId.value === 'guide')
 const hotelDim = computed(() => dimensions.value.find((d) => d.id === 'hotel'))
 const hotelOptions = computed(() => hotelDim.value?.options ?? [])
+const guideDim = computed(() => dimensions.value.find((d) => d.id === 'guide'))
+const guideOptions = computed(() => guideDim.value?.options ?? [])
+const needsGuideDays = computed(() =>
+  !isDriverGuideSelection(String(selections.guide ?? ''), guideDim.value),
+)
 const vehicleNeedsDim = computed(() => dimensions.value.find((d) => d.id === 'vehicleNeeds'))
 const vehicleNeedsOptions = computed(() => vehicleNeedsDim.value?.options ?? [])
 const vehicleDaysDisplay = computed(() => {
   const val = selections.vehicleDays
+  return val === undefined ? 0 : Number(val)
+})
+const guideDaysDisplay = computed(() => {
+  const val = selections.guideDays
   return val === undefined ? 0 : Number(val)
 })
 const stepHint = computed(() => (currentStepId.value ? STEP_HINTS[currentStepId.value] : ''))
@@ -463,6 +509,13 @@ function isCurrentStepValid(): boolean {
   }
   if (stepId === 'vehicleDays') {
     return isNumberDimValid('vehicleDays') && asArray(selections.vehicleNeeds).length > 0
+  }
+  if (stepId === 'guide') {
+    const guideVal = selections.guide
+    const guideOk = guideVal !== undefined && guideVal !== null && String(guideVal) !== ''
+    if (!guideOk) return false
+    if (isDriverGuideSelection(String(guideVal), guideDim.value)) return true
+    return isNumberDimValid('guideDays')
   }
 
   const dim = dimensions.value.find((d) => d.id === stepId)
@@ -621,6 +674,27 @@ function toggleVehicleNeed(opt: DimensionOption) {
   toggleOption(dim, opt)
 }
 
+function toggleGuideOption(opt: DimensionOption) {
+  const dim = guideDim.value
+  if (!dim) return
+  selections.guide = opt.id
+  if (isDriverGuideSelection(opt.id, dim)) {
+    delete selections.guideDays
+  } else {
+    if (selections.guideDays === undefined) {
+      ensureDimensionInitialized('guideDays')
+      if (selections.vehicleDays !== undefined) {
+        const vehicleDays = Number(selections.vehicleDays)
+        const guideDaysDim = dimensions.value.find((d) => d.id === 'guideDays')
+        const min = guideDaysDim?.min ?? 1
+        const max = guideDaysDim?.max ?? 99
+        selections.guideDays = Math.min(max, Math.max(min, vehicleDays))
+      }
+    }
+  }
+  recalc()
+}
+
 function toggleOption(dim: Dimension, opt: DimensionOption) {
   if (dim.id === 'vehicle' && !isVehicleOptionAvailable(opt)) return
   if (dim.type === 'multi_select' || dim.id === 'attractions') {
@@ -695,6 +769,11 @@ watch(step, () => {
   } else if (id === 'vehicleDays') {
     ensureDimensionInitialized('vehicleDays')
     ensureDimensionInitialized('vehicleNeeds')
+  } else if (id === 'guide') {
+    ensureDimensionInitialized('guide')
+    if (!isDriverGuideSelection(String(selections.guide ?? ''), guideDim.value)) {
+      ensureDimensionInitialized('guideDays')
+    }
   } else if (id === 'vehicle') {
     syncDefaultVehicle({ allowFirstPick: true })
   } else if (id && id !== 'summary') {

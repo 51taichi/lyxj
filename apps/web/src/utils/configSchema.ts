@@ -10,7 +10,7 @@ export interface PriceFieldDef {
 export const ATTRACTION_PASSES_KEY = 'attractionPasses'
 
 /** 向导中不单独成步，与 adults 合并为「请选择人数」 */
-export const WIZARD_HIDDEN_DIM_IDS = ['children', 'rooms', 'vehicleNeeds', 'nights']
+export const WIZARD_HIDDEN_DIM_IDS = ['children', 'rooms', 'vehicleNeeds', 'nights', 'guideDays']
 
 /** 各维度选项可维护的价格字段 */
 export const DIMENSION_PRICE_FIELDS: Record<string, PriceFieldDef[]> = {
@@ -29,7 +29,7 @@ export const DIMENSION_PRICE_FIELDS: Record<string, PriceFieldDef[]> = {
     { key: 'maxPax', label: '最多人数', shortLabel: '最多', unit: '人' },
   ],
   hotel: [{ key: 'roomNight', label: '每晚每间（元）', shortLabel: '每晚', unit: '元' }],
-  guide: [{ key: 'feeDay', label: '导服（元/整单）', shortLabel: '导服', unit: '元' }],
+  guide: [{ key: 'feeDay', label: '导服单价（元/天）', shortLabel: '导服', unit: '元/天' }],
 }
 
 /** 管理后台维度维护说明（比向导提示更具体） */
@@ -43,7 +43,8 @@ export const ADMIN_HINTS: Record<string, string> = {
   vehicleNeeds:
     '维护需求名称即可；「市内」按天×用车天数，其余按次。保存后各车型自动出现对应价格列。',
   hotel: '每个酒店标准维护「每晚」单价（元/间/晚）。',
-  guide: '每个导服选项维护整单导服费（元/整单）。',
+  guide: '独立导游/金牌导游维护单价（元/天）×讲解天数；司兼导填 0 且不选讲解天数。',
+  guideDays: '仅维护讲解天数范围与默认值（向导中与导服方式同一步，司兼导时不显示）。',
   nights: '仅维护晚数范围与默认值，无单价。',
   rooms: '仅维护间数范围与默认值，无单价。',
 }
@@ -59,7 +60,8 @@ export const STEP_HINTS: Record<string, string> = {
   hotel: '选择酒店标准，并填写住宿晚数与房间数。',
   nights: '与酒店单价、间数相乘得出住宿费（向导中与酒店标准同一步填写）。',
   rooms: '与酒店单价、晚数相乘得出住宿费（向导中与酒店标准同一步填写）。',
-  guide: '导服为整单一次性费用；司兼导可为 0。',
+  guide: '司兼导无需讲解天数；选独立导游或金牌导游时需填写讲解天数，按单价×天数计费。',
+  guideDays: '与导服方式同一步填写（司兼导时隐藏）。',
 }
 
 export const DIMENSION_TYPE_LABELS: Record<string, string> = {
